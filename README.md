@@ -2,6 +2,8 @@
 
 A lightweight yet powerful GDPR/CCPA compliant cookie consent plugin for WordPress that blocks cookies, localStorage, and sessionStorage until the user gives consent. Fully compatible with Google Consent Mode v2.
 
+**This will probably break your site if you do not know what you are doing!** Code is for advanced WordPress developers.
+
 ## Features
 
 - **Pre-consent Blocking**: Automatically blocks cookies, localStorage, and sessionStorage before consent
