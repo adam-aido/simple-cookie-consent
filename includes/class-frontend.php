@@ -48,15 +48,19 @@ class Simple_Cookie_Consent_Frontend {
             true
         );
 
+        // Create a properly formatted nonce
+        $nonce = wp_create_nonce('simple_cookie_consent_nonce');
+
         // Pass settings to script
         $settings = array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('simple-cookie-consent-nonce'),
+            'nonce' => $nonce,
             'cookieExpiry' => get_option('simple_cookie_consent_expiry', 180),
             'consentTypes' => Simple_Cookie_Consent::get_consent_types(),
             'googleConsentMode' => get_option('simple_cookie_consent_gcm_enabled', 'yes') === 'yes',
             'googleConsentRegion' => get_option('simple_cookie_consent_gcm_region', 'EU'),
             'googleTagId' => get_option('simple_cookie_consent_gcm_tag_id', ''),
+            'debugMode' => (defined('WP_DEBUG') && WP_DEBUG),
             'texts' => array(
                 'banner_title' => get_option('simple_cookie_consent_title', __('Cookie Consent', 'simple-cookie-consent')),
                 'banner_text' => get_option('simple_cookie_consent_text', __('This website uses cookies to ensure you get the best experience.', 'simple-cookie-consent')),

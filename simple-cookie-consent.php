@@ -3,7 +3,7 @@
  * Plugin Name: Simple Cookie Consent
  * Plugin URI: https://github.com/adam-aido/simple-cookie-consent
  * Description: A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent.
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: Adam Antoszczak
  * Author URI: https://webartisan.pro
  * License: Unlicense
@@ -20,7 +20,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('SIMPLE_COOKIE_CONSENT_VERSION', '1.1.2');
+define('SIMPLE_COOKIE_CONSENT_VERSION', '1.1.3');
 
 // Plugin paths
 define('SIMPLE_COOKIE_CONSENT_PLUGIN_DIR', plugin_dir_path(__FILE__));

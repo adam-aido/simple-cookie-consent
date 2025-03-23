@@ -24,7 +24,7 @@ class Simple_Cookie_Consent_Cookie_Controller {
         // Add filters to block cookies until consent
         add_filter('wp_headers', array($this, 'modify_cookie_headers'), 999);
         
-        // AJAX handlers for cookie consent
+        // AJAX handlers for cookie consent - make sure they're properly hooked
         add_action('wp_ajax_simple_cookie_set_consent', array($this, 'ajax_set_consent'));
         add_action('wp_ajax_nopriv_simple_cookie_set_consent', array($this, 'ajax_set_consent'));
     }
@@ -55,9 +55,21 @@ class Simple_Cookie_Consent_Cookie_Controller {
      * AJAX handler for setting cookie consent
      */
     public function ajax_set_consent() {
-        check_ajax_referer('simple_cookie_consent_nonce', 'nonce');
+        // Basic debug information to verify the function is being called
+        error_log('AJAX consent function called');
+        
+        // Verify nonce with relaxed checking for debugging
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'simple_cookie_consent_nonce')) {
+            error_log('Nonce verification failed: ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
+            wp_send_json_error('Invalid security token');
+            wp_die();
+        }
 
+        // Get consent data
         $consent_accepted = isset($_POST['accepted']) && $_POST['accepted'] ? true : false;
+        
+        // Log consent data for debugging
+        error_log('Consent accepted: ' . ($consent_accepted ? 'yes' : 'no'));
         
         if (isset($_POST['details']) && is_array($_POST['details'])) {
             // Sanitize details
@@ -75,17 +87,25 @@ class Simple_Cookie_Consent_Cookie_Controller {
                 }
             }
             
-            // Store in cookies
-            $this->set_consent_cookies($consent_accepted, $sanitized_details);
+            // Log sanitized details for debugging
+            error_log('Consent details: ' . wp_json_encode($sanitized_details));
             
-            // Also store in database
+            // Store in database if storage is available
             if ($this->storage) {
-                $this->storage->store_consent($consent_accepted, $sanitized_details);
+                try {
+                    $result = $this->storage->store_consent($consent_accepted, $sanitized_details);
+                    error_log('Storage result: ' . ($result ? 'success' : 'failure'));
+                } catch (Exception $e) {
+                    error_log('Error storing consent: ' . $e->getMessage());
+                }
+            } else {
+                error_log('Storage not available');
             }
             
             wp_send_json_success('Consent saved');
         } else {
-            wp_send_json_error('Invalid details');
+            error_log('Invalid details format');
+            wp_send_json_error('Invalid details format');
         }
         
         wp_die(); // Proper AJAX termination

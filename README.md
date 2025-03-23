@@ -183,6 +183,14 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
 
 ## Changelog
 
+### 1.1.3 (March 23, 2025)
+
+- **Bug Fixes:**
+  - Fixed 403 error with AJAX consent saving
+  - Added detailed error logging for AJAX requests
+  - Improved fallback handling when AJAX fails
+  - Added graceful degradation for server-side storage
+
 ### 1.1.2 (March 23, 2025)
 
 - **Bug Fixes:**
@@ -211,7 +219,7 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
   - Database version tracking and updates
   - Optimized query performance
 
-### 1.0.0 (February 15, 2025)
+### 1.0.0 (February 23, 2025)
 
 - **New Features:**
   - Core cookie and storage blocking functionality

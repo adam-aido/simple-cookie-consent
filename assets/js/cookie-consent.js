@@ -1,5 +1,5 @@
 /**
- * Cookie Consent Handler
+ * Cookie Consent Handler - AJAX Fix
  */
 (function($) {
     'use strict';
@@ -372,9 +372,14 @@
      * Send consent data to server via AJAX
      */
     function sendConsentToServer(accepted, details) {
-        if (!simpleCookieConsent || !simpleCookieConsent.ajaxUrl || !simpleCookieConsent.nonce) {
+        // Check if AJAX settings are available
+        if (!simpleCookieConsent || !simpleCookieConsent.ajaxUrl) {
+            console.warn('AJAX URL not available, skipping server-side consent storage');
             return;
         }
+        
+        // Get WordPress admin-ajax URL
+        const ajaxUrl = simpleCookieConsent.ajaxUrl;
         
         // Clone the details to avoid modifying the original object
         const safeDetails = {};
@@ -385,12 +390,13 @@
             safeDetails[key] = !!details[key];
         });
         
+        // Use WordPress admin-ajax.php endpoint
         $.ajax({
-            url: simpleCookieConsent.ajaxUrl,
+            url: ajaxUrl,
             type: 'POST',
             data: {
-                action: 'simple_cookie_set_consent',
-                nonce: simpleCookieConsent.nonce,
+                action: 'simple_cookie_set_consent', // WordPress action hook
+                nonce: simpleCookieConsent.nonce || '',
                 accepted: accepted ? 1 : 0,
                 details: safeDetails
             },
@@ -398,11 +404,17 @@
                 if (response && response.success) {
                     console.log('Consent saved to server');
                 } else {
-                    console.error('Error saving consent:', response?.data || 'Unknown error');
+                    console.warn('Server response indicates error:', response);
                 }
             },
             error: function(xhr, status, error) {
+                // Log detailed error information for debugging
                 console.error('AJAX error saving consent:', error);
+                console.log('Status code:', xhr.status);
+                console.log('Response text:', xhr.responseText);
+                
+                // Continue without server-side storage
+                console.warn('Unable to save consent to server, continuing with client-side consent only');
             }
         });
     }
