@@ -183,6 +183,14 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
 
 ## Changelog
 
+### 1.1.1 (March 23, 2025)
+
+- **Bug Fixes:**
+  - Fixed fatal error when loading WP_List_Table class
+  - Improved admin page loading for consent log
+  - Separated list table functionality into dedicated class
+  - Fixed potential admin-only functions conflict
+
 ### 1.1.0 (March 23, 2025)
 
 - **New Features:**
@@ -195,7 +203,7 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
   - Database version tracking and updates
   - Optimized query performance
 
-### 1.0.0 (March 23, 2025)
+### 1.0.0 (February 15, 2025)
 
 - **New Features:**
   - Core cookie and storage blocking functionality
