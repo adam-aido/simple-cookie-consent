@@ -3,7 +3,7 @@
  * Plugin Name: Simple Cookie Consent
  * Plugin URI: https://example.com/simple-cookie-consent
  * Description: A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Your Name
  * Author URI: https://example.com
  * License: Unlicense
@@ -20,7 +20,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('SIMPLE_COOKIE_CONSENT_VERSION', '1.0.0');
+define('SIMPLE_COOKIE_CONSENT_VERSION', '1.1.0');
 
 // Plugin paths
 define('SIMPLE_COOKIE_CONSENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
