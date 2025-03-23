@@ -18,10 +18,16 @@
                 .find(row => row.startsWith('simple_cookie_consent_details='));
             
             if (consentCookie) {
-                return JSON.parse(decodeURIComponent(consentCookie.split('=')[1]));
+                // Use try-catch to handle potential JSON parsing errors
+                try {
+                    return JSON.parse(decodeURIComponent(consentCookie.split('=')[1]));
+                } catch (parseError) {
+                    console.error('Error parsing consent details JSON', parseError);
+                    return null;
+                }
             }
         } catch (e) {
-            console.error('Error parsing consent details', e);
+            console.error('Error accessing consent details', e);
         }
         
         return null;
@@ -32,84 +38,125 @@
         console.log('Cookie Consent: Blocking cookies and storage until consent is given');
         
         // Store original methods
-        const originalDocumentCookie = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
-        const originalLocalStorage = window.localStorage;
-        const originalSessionStorage = window.sessionStorage;
+        let originalDocumentCookie;
         
-        // Override document.cookie
-        Object.defineProperty(Document.prototype, 'cookie', {
-            get: function() {
-                return originalDocumentCookie.get.call(this);
-            },
-            set: function(value) {
-                // Allow setting the consent cookie itself
-                if (value.indexOf('simple_cookie_consent_') === 0) {
-                    originalDocumentCookie.set.call(this, value);
-                    return value;
-                }
-                
-                // Block all other cookies
-                console.warn('Cookie blocked by consent manager:', value);
-                return '';
-            },
-            configurable: true
-        });
+        try {
+            originalDocumentCookie = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
+        } catch (e) {
+            console.error('Error capturing original cookie API:', e);
+        }
         
-        // Create blocking storage
-        function createBlockingStorage() {
-            const items = {};
-            return {
-                setItem: function(key, value) {
-                    console.warn('Storage blocked by consent manager:', key);
-                },
-                getItem: function(key) {
-                    return null;
-                },
-                removeItem: function(key) {},
-                clear: function() {},
-                key: function(index) { return null; },
-                get length() { return 0; }
+        // Instead of trying to override localStorage/sessionStorage (which may be protected),
+        // create proxy methods that intercept calls to them
+        
+        // Create storage intercepts for localStorage and sessionStorage
+        function createStorageIntercept(storageType) {
+            if (!window[storageType]) return;
+            
+            // Store original methods from storage
+            const originalSetItem = window[storageType].setItem;
+            const originalRemoveItem = window[storageType].removeItem;
+            const originalClear = window[storageType].clear;
+            
+            // Override setItem to block storage
+            window[storageType].setItem = function(key, value) {
+                console.warn(`${storageType} blocked by consent manager:`, key);
+                return undefined;
+            };
+            
+            // Override removeItem to block storage
+            window[storageType].removeItem = function(key) {
+                console.warn(`${storageType} removeItem blocked by consent manager:`, key);
+                return undefined;
+            };
+            
+            // Override clear to block storage
+            window[storageType].clear = function() {
+                console.warn(`${storageType} clear blocked by consent manager`);
+                return undefined;
+            };
+            
+            // Return restore function for later
+            return function() {
+                window[storageType].setItem = originalSetItem;
+                window[storageType].removeItem = originalRemoveItem;
+                window[storageType].clear = originalClear;
+                console.log(`${storageType} original methods restored`);
             };
         }
         
-        // Override localStorage and sessionStorage
+        // Set up intercepts
+        const restoreLocalStorage = createStorageIntercept('localStorage');
+        const restoreSessionStorage = createStorageIntercept('sessionStorage');
+        
+        // Override document.cookie with proper error handling
         try {
-            window.localStorage = createBlockingStorage();
-            window.sessionStorage = createBlockingStorage();
+            Object.defineProperty(Document.prototype, 'cookie', {
+                get: function() {
+                    return originalDocumentCookie.get.call(this);
+                },
+                set: function(value) {
+                    // Allow setting the consent cookie itself
+                    if (value && typeof value === 'string' && value.indexOf('simple_cookie_consent_') === 0) {
+                        originalDocumentCookie.set.call(this, value);
+                        return value;
+                    }
+                    
+                    // Block all other cookies
+                    console.warn('Cookie blocked by consent manager:', value);
+                    return '';
+                },
+                configurable: true
+            });
         } catch (e) {
-            console.error('Error overriding storage APIs:', e);
+            console.error('Error overriding cookie API:', e);
         }
         
-        // Add function to restore original behavior
+        // Add function to restore original behavior with proper error handling
         window.enableCookiesAndStorage = function(consentDetails) {
-            // Restore original document.cookie
-            Object.defineProperty(Document.prototype, 'cookie', originalDocumentCookie);
-            
-            // Restore localStorage and sessionStorage only if respective consent is given
-            if (consentDetails) {
-                if (consentDetails.preferences === true) {
-                    window.localStorage = originalLocalStorage;
-                    window.sessionStorage = originalSessionStorage;
+            try {
+                // Restore original document.cookie
+                if (originalDocumentCookie) {
+                    Object.defineProperty(Document.prototype, 'cookie', originalDocumentCookie);
                 }
                 
-                // Initialize Google Consent Mode v2 if enabled
-                if (window.gtag && consentDetails.googleConsentMode) {
-                    window.gtag('consent', 'update', {
-                        'ad_storage': consentDetails.marketing ? 'granted' : 'denied',
-                        'analytics_storage': consentDetails.analytics ? 'granted' : 'denied',
-                        'functionality_storage': consentDetails.necessary ? 'granted' : 'denied',
-                        'personalization_storage': consentDetails.social ? 'granted' : 'denied',
-                        'security_storage': 'granted' // Always granted for security
-                    });
+                // Restore localStorage and sessionStorage methods if respective consent is given
+                if (consentDetails && typeof consentDetails === 'object') {
+                    if (consentDetails.preferences === true) {
+                        if (restoreLocalStorage) restoreLocalStorage();
+                        if (restoreSessionStorage) restoreSessionStorage();
+                    }
+                    
+                    // Initialize Google Consent Mode v2 if enabled
+                    if (window.gtag && consentDetails.googleConsentMode) {
+                        updateGoogleConsent(consentDetails);
+                    }
+                } else {
+                    // If no details provided, restore everything (full consent)
+                    if (restoreLocalStorage) restoreLocalStorage();
+                    if (restoreSessionStorage) restoreSessionStorage();
                 }
-            } else {
-                // If no details provided, restore everything (full consent)
-                window.localStorage = originalLocalStorage;
-                window.sessionStorage = originalSessionStorage;
+                
+                console.log('Cookie Consent: Storage APIs restored according to preferences');
+            } catch (e) {
+                console.error('Error restoring storage APIs:', e);
             }
-            
-            console.log('Cookie Consent: Storage APIs restored according to preferences');
         };
+        
+        // Helper function for updating Google Consent
+        function updateGoogleConsent(details) {
+            try {
+                window.gtag('consent', 'update', {
+                    'ad_storage': details.marketing ? 'granted' : 'denied',
+                    'analytics_storage': details.analytics ? 'granted' : 'denied',
+                    'functionality_storage': details.necessary ? 'granted' : 'denied',
+                    'personalization_storage': details.social ? 'granted' : 'denied',
+                    'security_storage': 'granted' // Always granted for security
+                });
+            } catch (e) {
+                console.error('Error updating Google consent:', e);
+            }
+        }
     } else {
         // If consent exists, enable storage with saved preferences
         const consentDetails = getConsentDetails();
@@ -118,15 +165,34 @@
         }
     }
     
-    // Setup a global function to check cookie consent status
-    window.hasSimpleCookieConsent = hasConsent;
-    window.getSimpleCookieConsentDetails = getConsentDetails;
+    // Setup a global function to check cookie consent status - but safely
+    window.hasSimpleCookieConsent = function() {
+        try {
+            return hasConsent();
+        } catch (e) {
+            console.error('Error checking consent status:', e);
+            return false;
+        }
+    };
+    
+    window.getSimpleCookieConsentDetails = function() {
+        try {
+            return getConsentDetails();
+        } catch (e) {
+            console.error('Error getting consent details:', e);
+            return null;
+        }
+    };
     
     // Setup a global function to manually open the cookie modal
     window.openCookieModal = function() {
-        const modal = document.querySelector('.scc-modal');
-        if (modal) {
-            modal.style.display = 'flex';
+        try {
+            const modal = document.querySelector('.scc-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        } catch (e) {
+            console.error('Error opening cookie modal:', e);
         }
     };
 })();

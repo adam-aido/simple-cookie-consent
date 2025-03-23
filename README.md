@@ -183,6 +183,14 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
 
 ## Changelog
 
+### 1.1.2 (March 23, 2025)
+
+- **Bug Fixes:**
+  - Fixed localStorage and sessionStorage override error in modern browsers
+  - Implemented method interception instead of property override for storage APIs
+  - Improved error handling and graceful degradation
+  - Enhanced console logging for better debugging
+
 ### 1.1.1 (March 23, 2025)
 
 - **Bug Fixes:**

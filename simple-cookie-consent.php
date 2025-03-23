@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Simple Cookie Consent
- * Plugin URI: https://example.com/simple-cookie-consent
+ * Plugin URI: https://github.com/adam-aido/simple-cookie-consent
  * Description: A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent.
- * Version: 1.1.1
- * Author: Your Name
- * Author URI: https://example.com
+ * Version: 1.1.2
+ * Author: Adam Antoszczak
+ * Author URI: https://webartisan.pro
  * License: Unlicense
  * License URI: http://unlicense.org/
  * Text Domain: simple-cookie-consent
@@ -20,7 +20,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('SIMPLE_COOKIE_CONSENT_VERSION', '1.1.1');
+define('SIMPLE_COOKIE_CONSENT_VERSION', '1.1.2');
 
 // Plugin paths
 define('SIMPLE_COOKIE_CONSENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
