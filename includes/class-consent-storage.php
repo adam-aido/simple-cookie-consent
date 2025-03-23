@@ -30,6 +30,24 @@ class Simple_Cookie_Consent_Storage {
     }
 
     /**
+     * Check if the consent table exists in the database
+     *
+     * @return bool Whether the table exists
+     */
+    public function table_exists() {
+        global $wpdb;
+        
+        $result = $wpdb->get_var(
+            $wpdb->prepare(
+                "SHOW TABLES LIKE %s",
+                $this->table_name
+            )
+        );
+        
+        return !empty($result);
+    }
+
+    /**
      * Create database tables
      */
     public function create_tables() {
@@ -56,6 +74,9 @@ class Simple_Cookie_Consent_Storage {
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
+        
+        // Debug log
+        error_log('Cookie consent table created: ' . $this->table_name);
     }
 
     /**
@@ -173,6 +194,11 @@ class Simple_Cookie_Consent_Storage {
             $encoded_details = '{}'; // Fallback to empty object
         }
         
+        // Create table if it doesn't exist
+        if (!$this->table_exists()) {
+            $this->create_tables();
+        }
+        
         // Insert record with prepared statement for security
         $inserted = $wpdb->insert(
             $this->table_name,
@@ -200,6 +226,8 @@ class Simple_Cookie_Consent_Storage {
         
         if ($inserted === false) {
             error_log('Database error when storing consent: ' . $wpdb->last_error);
+        } else {
+            error_log('Consent stored with ID: ' . $wpdb->insert_id);
         }
         
         return ($inserted !== false);
@@ -288,6 +316,12 @@ class Simple_Cookie_Consent_Storage {
     public function get_consents($args = array()) {
         global $wpdb;
         
+        // Create table if it doesn't exist
+        if (!$this->table_exists()) {
+            $this->create_tables();
+            return array(); // Return empty array as the table was just created
+        }
+        
         $defaults = array(
             'number'     => 20,
             'offset'     => 0,
@@ -303,7 +337,13 @@ class Simple_Cookie_Consent_Storage {
         // Sanitize input parameters
         $number = absint($args['number']);
         $offset = absint($args['offset']);
-        $orderby = sanitize_sql_orderby($args['orderby'] . ' ' . $args['order']) ?: 'id DESC';
+        
+        // Validate orderby field
+        $allowed_orderby = ['id', 'status', 'created_at', 'updated_at']; 
+        $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'id';
+        
+        // Validate order direction
+        $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
         
         // Build query with prepared statements for security
         $query = "SELECT * FROM {$this->table_name} WHERE 1=1";
@@ -326,36 +366,72 @@ class Simple_Cookie_Consent_Storage {
         }
         
         // Add order and limit
-        $query .= " ORDER BY {$orderby} LIMIT %d, %d";
-        $prepare_args[] = $offset;
+        $query .= " ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
         $prepare_args[] = $number;
+        $prepare_args[] = $offset;
         
-        // Prepare and execute the query
+        // Prepare the query
         $prepared_query = !empty($prepare_args) 
             ? $wpdb->prepare($query, $prepare_args) 
             : $query;
+            
+        // Debug the query
+        error_log('Consent query: ' . $prepared_query);
         
-        // Get results
+        // Execute the query
         $results = $wpdb->get_results($prepared_query, ARRAY_A);
         
-        // Process results
+        // Check for errors
+        if ($wpdb->last_error) {
+            error_log('Database error in get_consents: ' . $wpdb->last_error);
+            return array();
+        }
+        
+        // Debug the results
+        error_log('Query returned ' . count($results) . ' results');
+        
+        // Process results - properly decode the JSON consent details
         $consents = array();
-        if (is_array($results)) {
+        if (is_array($results) && !empty($results)) {
             foreach ($results as $row) {
-                // Decode consent details safely
-                try {
-                    $details = json_decode($row['consent_details'], true);
-                    // Validate the decoded data
-                    if (!is_array($details)) {
-                        $details = array();
+                // Ensure all expected fields exist
+                $processed_row = array(
+                    'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                    'user_id' => isset($row['user_id']) ? (int) $row['user_id'] : null,
+                    'ip_address' => isset($row['ip_address']) ? $row['ip_address'] : '',
+                    'user_agent' => isset($row['user_agent']) ? $row['user_agent'] : '',
+                    'consent_type' => isset($row['consent_type']) ? $row['consent_type'] : '',
+                    'status' => isset($row['status']) ? $row['status'] : '',
+                    'created_at' => isset($row['created_at']) ? $row['created_at'] : '',
+                    'updated_at' => isset($row['updated_at']) ? $row['updated_at'] : '',
+                );
+                
+                // Process consent details - decode JSON if present
+                if (isset($row['consent_details']) && !empty($row['consent_details'])) {
+                    try {
+                        // Attempt to decode the JSON
+                        $details = json_decode($row['consent_details'], true);
+                        
+                        // Verify it decoded to an array
+                        if (is_array($details)) {
+                            $processed_row['consent_details'] = $details;
+                        } else {
+                            error_log('Consent details not an array for ID ' . $row['id'] . ': ' . gettype($details));
+                            $processed_row['consent_details'] = array();
+                        }
+                    } catch (Exception $e) {
+                        error_log('Error decoding consent details for ID ' . $row['id'] . ': ' . $e->getMessage());
+                        $processed_row['consent_details'] = array();
                     }
-                } catch (Exception $e) {
-                    error_log('Error decoding consent details: ' . $e->getMessage());
-                    $details = array();
+                } else {
+                    $processed_row['consent_details'] = array();
                 }
                 
-                $row['consent_details'] = $details;
-                $consents[] = $row;
+                // Debug the processed row
+                error_log('Processed row ID ' . $processed_row['id'] . ' with consent details: ' . 
+                          wp_json_encode($processed_row['consent_details']));
+                
+                $consents[] = $processed_row;
             }
         }
         
@@ -370,6 +446,12 @@ class Simple_Cookie_Consent_Storage {
      */
     public function count_consents($args = array()) {
         global $wpdb;
+        
+        // Create table if it doesn't exist
+        if (!$this->table_exists()) {
+            $this->create_tables();
+            return 0; // Return 0 as the table was just created
+        }
         
         $defaults = array(
             'user_id'    => null,
@@ -404,7 +486,15 @@ class Simple_Cookie_Consent_Storage {
             ? $wpdb->prepare($query, $prepare_args) 
             : $query;
         
+        // Debug the count query
+        error_log('Count query: ' . $prepared_query);
+        
         // Get count
-        return (int) $wpdb->get_var($prepared_query);
+        $count = (int) $wpdb->get_var($prepared_query);
+        
+        // Debug the count result
+        error_log('Count result: ' . $count);
+        
+        return $count;
     }
 }

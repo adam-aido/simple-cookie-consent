@@ -183,6 +183,17 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
 
 ## Changelog
 
+### 1.1.5 (March 23, 2025)
+
+- **Bug Fixes:**
+  - Fixed empty columns in admin consent log
+  - Added detailed error logging for database operations
+  - Improved JSON handling for consent details
+  - Enhanced table existence verification
+  - Added custom styling for admin table display
+  - Fixed data processing in database queries
+  - Added better error messages in admin interface
+
 ### 1.1.4 (March 23, 2025)
 
 - **Bug Fixes:**
@@ -250,4 +261,3 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
   - Comprehensive README with examples
   - Proper code comments
   - Translation templates
-  
