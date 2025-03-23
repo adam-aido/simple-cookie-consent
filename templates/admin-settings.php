@@ -193,19 +193,26 @@ if (!defined('WPINC')) {
 </div>
 
 <script>
-    jQuery(document).ready(function($) {
+    document.addEventListener('DOMContentLoaded', function() {
         // Tab navigation
-        $('.nav-tab').on('click', function(e) {
-            e.preventDefault();
-            var target = $(this).attr('href');
-            
-            // Update active tab
-            $('.nav-tab').removeClass('nav-tab-active');
-            $(this).addClass('nav-tab-active');
-            
-            // Show target content
-            $('.tab-content').hide();
-            $(target).show();
+        const tabs = document.querySelectorAll('.nav-tab');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('href');
+                
+                // Update active tab
+                tabs.forEach(function(t) {
+                    t.classList.remove('nav-tab-active');
+                });
+                this.classList.add('nav-tab-active');
+                
+                // Show target content
+                document.querySelectorAll('.tab-content').forEach(function(content) {
+                    content.style.display = 'none';
+                });
+                document.querySelector(target).style.display = 'block';
+            });
         });
     });
 </script>

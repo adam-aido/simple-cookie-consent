@@ -34,21 +34,23 @@ if (!defined('WPINC')) {
 </div>
 
 <script>
-    jQuery(document).ready(function($) {
+    document.addEventListener('DOMContentLoaded', function() {
         // Load current settings if available
         function loadCurrentSettings() {
             try {
-                const consentCookie = document.cookie
-                    .split('; ')
-                    .find(row => row.startsWith('simple_cookie_consent_details='));
+                const cookies = document.cookie.split('; ');
+                const consentCookie = cookies.find(row => row.startsWith('simple_cookie_consent_details='));
                 
                 if (consentCookie) {
                     const details = JSON.parse(decodeURIComponent(consentCookie.split('=')[1]));
                     
                     // Set checkboxes based on stored preferences
-                    $.each(details, function(key, value) {
-                        if (value) {
-                            $('input[data-type="' + key + '"]').prop('checked', true);
+                    Object.keys(details).forEach(function(key) {
+                        if (details[key]) {
+                            const checkbox = document.querySelector('input[data-type="' + key + '"]');
+                            if (checkbox) {
+                                checkbox.checked = true;
+                            }
                         }
                     });
                 }
@@ -61,56 +63,58 @@ if (!defined('WPINC')) {
         loadCurrentSettings();
         
         // Update preferences button click
-        $('.scc-update-preferences').on('click', function() {
-            var preferences = {};
-            
-            // Get all toggle states
-            $('.scc-consent-checkbox').each(function() {
-                var type = $(this).data('type');
-                preferences[type] = $(this).is(':checked');
+        document.querySelectorAll('.scc-update-preferences').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var preferences = {};
+                
+                // Get all toggle states
+                document.querySelectorAll('.scc-consent-checkbox').forEach(function(checkbox) {
+                    var type = checkbox.dataset.type;
+                    preferences[type] = checkbox.checked;
+                });
+                
+                // Set preferences flag for Google Consent Mode
+                preferences.googleConsentMode = true;
+                
+                // Use the main plugin's functions to update cookies
+                if (typeof window.simpleCookieConsent !== 'undefined') {
+                    // Get cookie expiry
+                    var expiryDays = parseInt(window.simpleCookieConsent.cookieExpiry) || 180;
+                    var date = new Date();
+                    date.setTime(date.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
+                    var expires = 'expires=' + date.toUTCString();
+                    
+                    // Set acceptance cookie
+                    document.cookie = 'simple_cookie_consent_accepted=1; ' + expires + '; path=/; SameSite=Lax';
+                    
+                    // Store preferences
+                    document.cookie = 'simple_cookie_consent_details=' + encodeURIComponent(JSON.stringify(preferences)) + 
+                        '; ' + expires + '; path=/; SameSite=Lax';
+                    
+                    // Enable storage according to preferences
+                    if (typeof window.enableCookiesAndStorage === 'function') {
+                        window.enableCookiesAndStorage(preferences);
+                    }
+                    
+                    // Update Google Consent Mode if enabled
+                    if (window.simpleCookieConsent.googleConsentMode && window.gtag) {
+                        window.gtag('consent', 'update', {
+                            'ad_storage': preferences.marketing ? 'granted' : 'denied',
+                            'analytics_storage': preferences.analytics ? 'granted' : 'denied',
+                            'functionality_storage': preferences.necessary ? 'granted' : 'denied',
+                            'personalization_storage': preferences.social ? 'granted' : 'denied',
+                            'security_storage': 'granted'
+                        });
+                    }
+                }
+                
+                // Show success message
+                const originalText = button.textContent;
+                button.textContent = '<?php _e('Preferences Updated!', 'simple-cookie-consent'); ?>';
+                setTimeout(function() {
+                    button.textContent = originalText;
+                }, 2000);
             });
-            
-            // Set preferences flag for Google Consent Mode
-            preferences.googleConsentMode = true;
-            
-            // Use the main plugin's functions to update cookies
-            if (typeof window.simpleCookieConsent !== 'undefined') {
-                // Get cookie expiry
-                var expiryDays = parseInt(window.simpleCookieConsent.cookieExpiry) || 180;
-                var date = new Date();
-                date.setTime(date.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
-                var expires = 'expires=' + date.toUTCString();
-                
-                // Set acceptance cookie
-                document.cookie = 'simple_cookie_consent_accepted=1; ' + expires + '; path=/; SameSite=Lax';
-                
-                // Store preferences
-                document.cookie = 'simple_cookie_consent_details=' + encodeURIComponent(JSON.stringify(preferences)) + 
-                    '; ' + expires + '; path=/; SameSite=Lax';
-                
-                // Enable storage according to preferences
-                if (typeof window.enableCookiesAndStorage === 'function') {
-                    window.enableCookiesAndStorage(preferences);
-                }
-                
-                // Update Google Consent Mode if enabled
-                if (window.simpleCookieConsent.googleConsentMode && window.gtag) {
-                    window.gtag('consent', 'update', {
-                        'ad_storage': preferences.marketing ? 'granted' : 'denied',
-                        'analytics_storage': preferences.analytics ? 'granted' : 'denied',
-                        'functionality_storage': preferences.necessary ? 'granted' : 'denied',
-                        'personalization_storage': preferences.social ? 'granted' : 'denied',
-                        'security_storage': 'granted'
-                    });
-                }
-            }
-            
-            // Show success message
-            const originalText = $(this).text();
-            $(this).text('<?php _e('Preferences Updated!', 'simple-cookie-consent'); ?>');
-            setTimeout(function() {
-                $('.scc-update-preferences').text(originalText);
-            }, 2000);
         });
     });
 </script>

@@ -178,7 +178,7 @@ class Simple_Cookie_Consent_Admin_Log {
             
             <div class="tablenav bottom">
                 <div class="alignleft actions">
-                    <form method="post">
+                    <form method="post" id="export-form">
                         <?php wp_nonce_field('simple_cookie_consent_export_nonce', 'simple_cookie_consent_export_nonce'); ?>
                         <input type="hidden" name="action" value="export_consents">
                         <input type="submit" class="button button-primary" value="<?php esc_attr_e('Export to CSV', 'simple-cookie-consent'); ?>">
@@ -186,6 +186,31 @@ class Simple_Cookie_Consent_Admin_Log {
                 </div>
             </div>
         </div>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make notices dismissible
+            var notices = document.querySelectorAll('.notice.is-dismissible');
+            notices.forEach(function(notice) {
+                var closeButton = document.createElement('button');
+                closeButton.type = 'button';
+                closeButton.className = 'notice-dismiss';
+                closeButton.addEventListener('click', function() {
+                    notice.parentNode.removeChild(notice);
+                });
+                notice.appendChild(closeButton);
+            });
+            
+            // Handle export form submission
+            var exportForm = document.getElementById('export-form');
+            if (exportForm) {
+                exportForm.addEventListener('submit', function(e) {
+                    // You can add validation here if needed
+                    // e.preventDefault(); - don't prevent default as we want the form to submit
+                });
+            }
+        });
+        </script>
         <?php
     }
 

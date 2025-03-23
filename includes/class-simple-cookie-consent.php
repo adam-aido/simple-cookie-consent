@@ -101,38 +101,107 @@ class Simple_Cookie_Consent {
                 'label' => __('Necessary', 'simple-cookie-consent'),
                 'description' => __('These cookies are essential for the website to function properly.', 'simple-cookie-consent'),
                 'required' => true,
-                'gcm_purpose' => 'functionality_storage'
+                'gcm_purpose' => 'functionality_storage',
+                'services' => ['WordPress', 'Authentication']
             ),
             'preferences' => array(
                 'id' => 'preferences',
                 'label' => __('Preferences', 'simple-cookie-consent'),
-                'description' => __('These cookies allow the website to remember choices you make.', 'simple-cookie-consent'),
+                'description' => __('These cookies allow the website to remember choices you make and provide enhanced features.', 'simple-cookie-consent'),
                 'required' => false,
-                'gcm_purpose' => 'preference_storage'
+                'gcm_purpose' => 'preference_storage',
+                'services' => ['Theme Settings', 'Google Maps']
             ),
             'analytics' => array(
                 'id' => 'analytics',
                 'label' => __('Analytics', 'simple-cookie-consent'),
-                'description' => __('These cookies help us understand how visitors interact with the website.', 'simple-cookie-consent'),
+                'description' => __('These cookies help us understand how visitors interact with the website including Google Analytics.', 'simple-cookie-consent'),
                 'required' => false,
-                'gcm_purpose' => 'analytics_storage'
+                'gcm_purpose' => 'analytics_storage',
+                'services' => ['Google Analytics', 'Hotjar', 'Statistics']
             ),
             'marketing' => array(
                 'id' => 'marketing',
                 'label' => __('Marketing', 'simple-cookie-consent'),
-                'description' => __('These cookies are used to track visitors across websites to display relevant advertisements.', 'simple-cookie-consent'),
+                'description' => __('These cookies are used to track visitors across websites to display relevant advertisements including Google Ads and DoubleClick.', 'simple-cookie-consent'),
                 'required' => false,
-                'gcm_purpose' => 'ad_storage'
+                'gcm_purpose' => 'ad_storage',
+                'services' => ['Google Ads', 'Facebook Pixel', 'DoubleClick', 'AdSense']
             ),
             'social' => array(
                 'id' => 'social',
                 'label' => __('Social Media', 'simple-cookie-consent'),
-                'description' => __('These cookies are set by social media services that we have added to the site.', 'simple-cookie-consent'),
+                'description' => __('These cookies are set by social media services (YouTube, Facebook, Twitter, etc.) that we have added to the site.', 'simple-cookie-consent'),
                 'required' => false,
-                'gcm_purpose' => 'personalization_storage'
+                'gcm_purpose' => 'personalization_storage',
+                'services' => ['YouTube', 'Facebook', 'Twitter', 'Instagram', 'Vimeo', 'TikTok']
             )
         );
 
         return apply_filters('simple_cookie_consent_types', $consent_types);
+    }
+
+    /**
+     * Get service to consent type mapping
+     * 
+     * @return array Mapping of service names to consent type IDs
+     */
+    public static function get_service_mapping() {
+        return array(
+            // Google services
+            'google-analytics.com' => 'analytics',
+            'googletagmanager.com' => 'analytics',
+            'analytics.google.com' => 'analytics',
+            'doubleclick.net' => 'marketing',
+            'googlesyndication.com' => 'marketing',
+            'googleadservices.com' => 'marketing',
+            'google.com/ads' => 'marketing',
+            'google.com/recaptcha' => 'necessary',
+            'gstatic.com/recaptcha' => 'necessary',
+            'maps.google.com' => 'preferences',
+            'google.com/maps' => 'preferences',
+            
+            // YouTube
+            'youtube.com' => 'social',
+            'youtube-nocookie.com' => 'social',
+            'youtu.be' => 'social',
+            'ytimg.com' => 'social',
+            
+            // Other video platforms
+            'vimeo.com' => 'social',
+            'player.vimeo.com' => 'social',
+            
+            // Social media platforms
+            'facebook.com' => 'social',
+            'facebook.net' => 'social',
+            'fbcdn.net' => 'social',
+            'twitter.com' => 'social',
+            'twimg.com' => 'social',
+            'instagram.com' => 'social',
+            'cdninstagram.com' => 'social',
+            'linkedin.com' => 'social',
+            'pinterest.com' => 'social',
+            'tiktok.com' => 'social',
+            
+            // Analytics and tracking
+            'hotjar.com' => 'analytics',
+            'clarity.ms' => 'analytics',
+            'crazyegg.com' => 'analytics',
+            'mouseflow.com' => 'analytics',
+            
+            // Marketing/Ads
+            'ads-twitter.com' => 'marketing',
+            'adroll.com' => 'marketing',
+            'bing.com' => 'marketing',
+            'sharethis.com' => 'social',
+            'addthis.com' => 'social',
+            
+            // CDNs (usually necessary)
+            'cloudflare.com' => 'necessary',
+            'cloudfront.net' => 'necessary',
+            'jsdelivr.net' => 'necessary',
+            'unpkg.com' => 'necessary',
+            'cdnjs.cloudflare.com' => 'necessary'
+        );
     }
 }

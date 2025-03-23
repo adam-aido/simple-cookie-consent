@@ -83,7 +83,8 @@ class Simple_Cookie_Consent_Cookie_Controller {
                 
                 // Only accept known consent types plus googleConsentMode flag
                 if (in_array($key, $allowed_types) || $key === 'googleConsentMode') {
-                    $sanitized_details[$key] = (bool) $value;
+                    // Convert value to boolean
+                    $sanitized_details[$key] = ($value === '1' || $value === 'true' || $value === true);
                 }
             }
             
@@ -104,7 +105,7 @@ class Simple_Cookie_Consent_Cookie_Controller {
             
             wp_send_json_success('Consent saved');
         } else {
-            error_log('Invalid details format');
+            error_log('Invalid details format: not an array');
             wp_send_json_error('Invalid details format');
         }
         

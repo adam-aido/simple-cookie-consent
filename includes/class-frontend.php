@@ -12,10 +12,23 @@ class Simple_Cookie_Consent_Frontend {
      */
     public function init() {
         // Enqueue scripts and styles
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'), 1); // Priority 1 to load early
+        
+        // Add cookie blocker directly to head for maximum effectiveness
+        add_action('wp_head', array($this, 'add_early_cookie_blocker'), 1); // Priority 1 to run at the beginning of head
         
         // Add consent banner to footer
         add_action('wp_footer', array($this, 'add_consent_banner'));
+    }
+
+    /**
+     * Add early cookie blocker to head before any other scripts
+     */
+    public function add_early_cookie_blocker() {
+        // Only output if not already enqueued through wp_enqueue_scripts
+        if (!wp_script_is('simple-cookie-consent-blocker', 'done')) {
+            echo '<script>' . file_get_contents(SIMPLE_COOKIE_CONSENT_PLUGIN_DIR . 'assets/js/cookie-blocker.js') . '</script>';
+        }
     }
 
     /**
@@ -30,20 +43,23 @@ class Simple_Cookie_Consent_Frontend {
             SIMPLE_COOKIE_CONSENT_VERSION
         );
 
-        // Cookie blocker script (load early in head)
+        // Cookie blocker script (load early in head with highest priority)
         wp_enqueue_script(
             'simple-cookie-consent-blocker',
             SIMPLE_COOKIE_CONSENT_ASSETS_URL . 'js/cookie-blocker.js',
-            array(),
+            array(), // No dependencies
             SIMPLE_COOKIE_CONSENT_VERSION,
             false
         );
+        
+        // Ensure cookie blocker script loads as early as possible
+        wp_scripts()->add_data('simple-cookie-consent-blocker', 'group', 0);
 
         // Cookie consent handler script
         wp_enqueue_script(
             'simple-cookie-consent-js',
             SIMPLE_COOKIE_CONSENT_ASSETS_URL . 'js/cookie-consent.js',
-            array('jquery'),
+            array(), // Removed jQuery dependency
             SIMPLE_COOKIE_CONSENT_VERSION,
             true
         );

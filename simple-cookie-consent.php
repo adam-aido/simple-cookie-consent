@@ -3,7 +3,7 @@
  * Plugin Name: Simple Cookie Consent
  * Plugin URI: https://github.com/adam-aido/simple-cookie-consent
  * Description: A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent.
- * Version: 1.1.7
+ * Version: 1.3.0
  * Author: Adam Antoszczak + Claude.ai
  * Author URI: https://webartisan.pro
  * License: Unlicense
@@ -20,7 +20,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('SIMPLE_COOKIE_CONSENT_VERSION', '1.1.7');
+define('SIMPLE_COOKIE_CONSENT_VERSION', '1.3.0');
 
 // Plugin paths
 define('SIMPLE_COOKIE_CONSENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -208,3 +208,59 @@ function simple_cookie_consent_check_version() {
     }
 }
 add_action('plugins_loaded', 'simple_cookie_consent_check_version');
+
+/**
+ * Function to update the plugin files to support blocking Google and YouTube cookies
+ * 
+ * This function replaces the existing files with our enhanced versions
+ */
+function update_plugin_files_for_enhanced_blocking() {
+    // 1. Replace cookie-blocker.js with enhanced version
+    $cookie_blocker_path = SIMPLE_COOKIE_CONSENT_PLUGIN_DIR . 'assets/js/cookie-blocker.js';
+    $enhanced_cookie_blocker = file_get_contents(__DIR__ . '/enhanced-cookie-blocker.js');
+    if (!empty($enhanced_cookie_blocker)) {
+        file_put_contents($cookie_blocker_path, $enhanced_cookie_blocker);
+    }
+    
+    // 2. Replace cookie-consent.js with enhanced version
+    $cookie_consent_path = SIMPLE_COOKIE_CONSENT_PLUGIN_DIR . 'assets/js/cookie-consent.js';
+    $enhanced_cookie_consent = file_get_contents(__DIR__ . '/enhanced-cookie-consent.js');
+    if (!empty($enhanced_cookie_consent)) {
+        file_put_contents($cookie_consent_path, $enhanced_cookie_consent);
+    }
+    
+    // 3. Replace class-frontend.php with enhanced version
+    $frontend_path = SIMPLE_COOKIE_CONSENT_INCLUDES_DIR . 'class-frontend.php';
+    $enhanced_frontend = file_get_contents(__DIR__ . '/enhanced-frontend.php');
+    if (!empty($enhanced_frontend)) {
+        file_put_contents($frontend_path, $enhanced_frontend);
+    }
+    
+    // 4. Replace class-google-consent-mode.php with enhanced version
+    $gcm_path = SIMPLE_COOKIE_CONSENT_INCLUDES_DIR . 'class-google-consent-mode.php';
+    $enhanced_gcm = file_get_contents(__DIR__ . '/enhanced-gcm.php');
+    if (!empty($enhanced_gcm)) {
+        file_put_contents($gcm_path, $enhanced_gcm);
+    }
+    
+    // 5. Replace class-simple-cookie-consent.php with enhanced version
+    $core_path = SIMPLE_COOKIE_CONSENT_INCLUDES_DIR . 'class-simple-cookie-consent.php';
+    $enhanced_core = file_get_contents(__DIR__ . '/enhanced-consent-types.php');
+    if (!empty($enhanced_core)) {
+        file_put_contents($core_path, $enhanced_core);
+    }
+    
+    // Add a setting to indicate we've done the enhancement
+    update_option('simple_cookie_consent_enhanced', 'yes');
+}
+
+// Call the function to update files if not already enhanced
+function maybe_enable_enhanced_blocking() {
+    if (get_option('simple_cookie_consent_enhanced', 'no') !== 'yes') {
+        update_plugin_files_for_enhanced_blocking();
+    }
+}
+
+// Hook this to plugin activation and admin init
+add_action('activated_plugin', 'maybe_enable_enhanced_blocking');
+add_action('admin_init', 'maybe_enable_enhanced_blocking');
