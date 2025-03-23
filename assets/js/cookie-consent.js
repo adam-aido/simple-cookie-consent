@@ -1,5 +1,5 @@
 /**
- * Cookie Consent Handler - AJAX Fix
+ * Cookie Consent Handler - Fixed Boolean Handling
  */
 (function($) {
     'use strict';
@@ -232,7 +232,7 @@
         
         // Mark only essential cookies as accepted
         $.each(simpleCookieConsent.consentTypes, function(index, type) {
-            consentDetails[type.id] = !!type.required;
+            consentDetails[type.id] = type.required ? true : false;
         });
         
         consentDetails.googleConsentMode = simpleCookieConsent.googleConsentMode;
@@ -268,6 +268,9 @@
             } else if (details && typeof details[type.id] !== 'undefined') {
                 // Set checkbox state from saved preferences
                 $checkbox.prop('checked', !!details[type.id]);
+            } else {
+                // Default to unchecked for non-required types with no saved preference
+                $checkbox.prop('checked', false);
             }
         });
         
@@ -291,10 +294,16 @@
         // Get all toggle states
         $.each(simpleCookieConsent.consentTypes, function(index, type) {
             const $checkbox = $('#scc-consent-' + type.id);
+            // Explicitly set as true or false
             consentDetails[type.id] = $checkbox.length ? $checkbox.is(':checked') : false;
         });
         
         consentDetails.googleConsentMode = simpleCookieConsent.googleConsentMode;
+        
+        // Log for debugging
+        if (simpleCookieConsent.debugMode) {
+            console.log('Saving preferences:', consentDetails);
+        }
         
         // Set cookies
         setCookieConsent(true, consentDetails);
@@ -327,9 +336,9 @@
             try {
                 const safeDetails = {};
                 
-                // Force all values to be boolean
+                // Force all values to be true or false (explicit booleans)
                 Object.keys(details).forEach(key => {
-                    safeDetails[key] = !!details[key];
+                    safeDetails[key] = details[key] === true;
                 });
                 
                 document.cookie = 'simple_cookie_consent_details=' + 
@@ -357,10 +366,10 @@
         
         try {
             gtag('consent', 'update', {
-                'ad_storage': consentDetails.marketing ? 'granted' : 'denied',
-                'analytics_storage': consentDetails.analytics ? 'granted' : 'denied',
-                'functionality_storage': consentDetails.necessary ? 'granted' : 'denied',
-                'personalization_storage': consentDetails.social ? 'granted' : 'denied',
+                'ad_storage': consentDetails.marketing === true ? 'granted' : 'denied',
+                'analytics_storage': consentDetails.analytics === true ? 'granted' : 'denied',
+                'functionality_storage': consentDetails.necessary === true ? 'granted' : 'denied',
+                'personalization_storage': consentDetails.social === true ? 'granted' : 'denied',
                 'security_storage': 'granted' // Always granted for security
             });
         } catch (e) {
@@ -384,11 +393,16 @@
         // Clone the details to avoid modifying the original object
         const safeDetails = {};
         
-        // Sanitize details - only include valid consent types
+        // Sanitize details - convert to explicit booleans
         Object.keys(details || {}).forEach(key => {
-            // Force boolean values
-            safeDetails[key] = !!details[key];
+            // Force explicit boolean values (true or false)
+            safeDetails[key] = details[key] === true;
         });
+        
+        // Debug log
+        if (simpleCookieConsent.debugMode) {
+            console.log('Sending to server:', safeDetails);
+        }
         
         // Use WordPress admin-ajax.php endpoint
         $.ajax({

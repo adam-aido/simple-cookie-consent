@@ -183,6 +183,16 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
 
 ## Changelog
 
+### 1.1.4 (March 23, 2025)
+
+- **Bug Fixes:**
+  - Fixed empty rows in admin consent log
+  - Fixed incorrect boolean handling in consent storage
+  - Improved handling of consent preferences in JavaScript
+  - Added explicit boolean conversions to prevent type issues
+  - Enhanced data validation for consent details
+  - Improved empty data handling in admin table display
+
 ### 1.1.3 (March 23, 2025)
 
 - **Bug Fixes:**
@@ -219,7 +229,7 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
   - Database version tracking and updates
   - Optimized query performance
 
-### 1.0.0 (February 23, 2025)
+### 1.0.0 (March 23, 2025)
 
 - **New Features:**
   - Core cookie and storage blocking functionality
@@ -240,3 +250,4 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
   - Comprehensive README with examples
   - Proper code comments
   - Translation templates
+  
