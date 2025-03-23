@@ -52,7 +52,7 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
         $current_page = $this->get_pagenum();
         $offset = ($current_page - 1) * $per_page;
         
-        // Build query args
+        // Get items
         $args = [
             'number' => $per_page,
             'offset' => $offset,
@@ -71,9 +71,18 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
             }
         }
         
+        $this->items = array();
+        
         // Get items from storage
         if ($this->storage && method_exists($this->storage, 'get_consents')) {
             $this->items = $this->storage->get_consents($args);
+            
+            // Debug the items
+            if (is_array($this->items) && !empty($this->items)) {
+                error_log('First item keys: ' . implode(', ', array_keys($this->items[0])));
+            } else {
+                error_log('No items returned from get_consents');
+            }
             
             // Set pagination args
             $total_items = $this->storage->count_consents();
@@ -84,7 +93,6 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
                 'total_pages' => ceil($total_items / $per_page)
             ]);
         } else {
-            $this->items = [];
             error_log('Storage not available or method get_consents not found');
             
             $this->set_pagination_args([
@@ -92,12 +100,6 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
                 'per_page' => $per_page,
                 'total_pages' => 0
             ]);
-        }
-        
-        // Debug the results
-        error_log('Consent items count: ' . count($this->items));
-        if (!empty($this->items) && is_array($this->items)) {
-            error_log('First item keys: ' . implode(', ', array_keys($this->items[0])));
         }
     }
 
@@ -130,19 +132,12 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
     }
 
     /**
-     * Column default
-     *
-     * @param array $item Item data
-     * @param string $column_name Column name
-     * @return string
+     * Column default - first check if method exists
      */
     public function column_default($item, $column_name) {
-        // Debug the item data for this column
-        error_log("Rendering column $column_name for item ID: " . (isset($item['id']) ? $item['id'] : 'unknown'));
-        
         switch ($column_name) {
             case 'id':
-                return isset($item['id']) ? (int) $item['id'] : '';
+                return isset($item['id']) ? absint($item['id']) : '';
             
             case 'user_info':
                 return $this->column_user_info($item);
@@ -163,202 +158,145 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
 
     /**
      * User info column
-     *
-     * @param array $item Item data
-     * @return string HTML output
      */
-    private function column_user_info($item) {
-        // Debug the item data
-        error_log("User info column data: " . wp_json_encode(array_intersect_key($item, array_flip(['user_id', 'ip_address', 'user_agent']))));
+    public function column_user_info($item) {
+        $output = '';
         
-        $output = '<div style="min-width: 200px;">';
-        
-        // User ID if available
         if (isset($item['user_id']) && !empty($item['user_id'])) {
             $user = get_userdata($item['user_id']);
-            $output .= '<div style="margin-bottom: 5px;"><strong>' . esc_html__('User:', 'simple-cookie-consent') . '</strong> ';
+            $output .= '<strong>' . esc_html__('User:', 'simple-cookie-consent') . '</strong> ';
             $output .= $user ? esc_html($user->display_name) . ' (#' . esc_html($item['user_id']) . ')' : esc_html('#' . $item['user_id']);
-            $output .= '</div>';
+            $output .= '<br>';
         }
         
-        // IP Address
         if (isset($item['ip_address']) && !empty($item['ip_address'])) {
-            $output .= '<div style="margin-bottom: 5px;"><strong>' . esc_html__('IP:', 'simple-cookie-consent') . '</strong> ';
+            $output .= '<strong>' . esc_html__('IP:', 'simple-cookie-consent') . '</strong> ';
             $output .= esc_html($item['ip_address']);
-            $output .= '</div>';
+            $output .= '<br>';
         }
         
-        // User Agent (abbreviated)
         if (isset($item['user_agent']) && !empty($item['user_agent'])) {
             $user_agent = $item['user_agent'];
             if (strlen($user_agent) > 50) {
                 $user_agent = substr($user_agent, 0, 47) . '...';
             }
-            $output .= '<div style="margin-bottom: 5px;" title="' . esc_attr($item['user_agent']) . '">';
             $output .= '<strong>' . esc_html__('Browser:', 'simple-cookie-consent') . '</strong> ';
             $output .= esc_html($user_agent);
-            $output .= '</div>';
         }
         
-        if (strpos($output, '<strong>') === false) {
-            $output .= esc_html__('No user information available', 'simple-cookie-consent');
+        if (empty($output)) {
+            $output = esc_html__('No user information available', 'simple-cookie-consent');
         }
-        
-        $output .= '</div>';
         
         return $output;
     }
 
     /**
      * Consent details column
-     *
-     * @param array $item Item data
-     * @return string HTML output
      */
-    private function column_consent_details($item) {
-        // Debug the consent details data
-        if (isset($item['consent_details'])) {
-            error_log("Consent details data: " . (is_array($item['consent_details']) ? wp_json_encode($item['consent_details']) : gettype($item['consent_details'])));
-        } else {
-            error_log("Consent details not set in item");
-        }
+    public function column_consent_details($item) {
+        $output = '';
         
-        // Process the consent details data
         $details = null;
         
-        // First, ensure we have some data to work with
+        // Check if consent_details exists and is populated
         if (isset($item['consent_details'])) {
-            // If it's already an array, use it directly
             if (is_array($item['consent_details'])) {
                 $details = $item['consent_details'];
-            } 
-            // If it's a JSON string, try to decode it
-            else if (is_string($item['consent_details'])) {
-                try {
-                    $decoded = json_decode($item['consent_details'], true);
-                    if (is_array($decoded)) {
-                        $details = $decoded;
-                    }
-                } catch (Exception $e) {
-                    error_log('Error decoding consent details: ' . $e->getMessage());
+            } elseif (is_string($item['consent_details']) && !empty($item['consent_details'])) {
+                // Try to decode JSON
+                $decoded = json_decode($item['consent_details'], true);
+                if (is_array($decoded)) {
+                    $details = $decoded;
                 }
             }
         }
         
-        // If we still don't have valid details, return a message
         if (!is_array($details) || empty($details)) {
-            return '<div style="color: #666; font-style: italic;">' . esc_html__('No details available', 'simple-cookie-consent') . '</div>';
+            return esc_html__('No consent details available', 'simple-cookie-consent');
         }
         
-        // Build the output for each consent type
-        $output = '<div style="min-width: 200px;">';
         $output .= '<ul class="consent-details-list" style="margin: 0; padding-left: 20px;">';
         
-        // Get consent types from the main class
+        // Get all available consent types
         $consent_types = Simple_Cookie_Consent::get_consent_types();
         
+        // Display each consent type status
         foreach ($consent_types as $type) {
             $type_id = $type['id'];
+            
             $is_accepted = isset($details[$type_id]) && $details[$type_id] === true;
             
             $status_icon = $is_accepted 
-                ? '<span class="dashicons dashicons-yes" style="color: green; font-size: 16px; vertical-align: text-bottom;"></span>' 
-                : '<span class="dashicons dashicons-no" style="color: red; font-size: 16px; vertical-align: text-bottom;"></span>';
+                ? '<span class="dashicons dashicons-yes" style="color: green;"></span>' 
+                : '<span class="dashicons dashicons-no" style="color: red;"></span>';
             
-            $output .= '<li style="margin-bottom: 5px;">' . $status_icon . ' <span style="vertical-align: middle;">' . esc_html($type['label']) . '</span></li>';
+            $output .= '<li>' . $status_icon . ' ' . esc_html($type['label']) . '</li>';
         }
         
         $output .= '</ul>';
-        $output .= '</div>';
         
         return $output;
     }
 
     /**
      * Status column
-     *
-     * @param array $item Item data
-     * @return string HTML output
      */
-    private function column_status($item) {
-        // Debug the status data
-        error_log("Status column data: " . (isset($item['status']) ? $item['status'] : 'not set'));
-        
+    public function column_status($item) {
         if (!isset($item['status']) || empty($item['status'])) {
-            return '<div style="color: #666; font-style: italic;">' . esc_html__('Unknown', 'simple-cookie-consent') . '</div>';
+            return esc_html__('Unknown', 'simple-cookie-consent');
         }
         
-        $status = $item['status'];
-        $output = '<div style="min-width: 100px; text-align: center;">';
+        $status = sanitize_text_field($item['status']);
         
         switch ($status) {
             case 'accepted':
-                $output .= '<span class="consent-status accepted" style="display: inline-block; padding: 4px 8px; background-color: #dff0d8; color: #3c763d; border-radius: 3px; font-weight: bold;">' . 
+                return '<span class="consent-status accepted" style="color: green; font-weight: bold;">' . 
                     esc_html__('Accepted', 'simple-cookie-consent') . '</span>';
-                break;
             
             case 'declined':
-                $output .= '<span class="consent-status declined" style="display: inline-block; padding: 4px 8px; background-color: #f2dede; color: #a94442; border-radius: 3px; font-weight: bold;">' . 
+                return '<span class="consent-status declined" style="color: red; font-weight: bold;">' . 
                     esc_html__('Declined', 'simple-cookie-consent') . '</span>';
-                break;
             
             case 'essential_only':
-                $output .= '<span class="consent-status essential-only" style="display: inline-block; padding: 4px 8px; background-color: #fcf8e3; color: #8a6d3b; border-radius: 3px; font-weight: bold;">' . 
+                return '<span class="consent-status essential-only" style="color: orange; font-weight: bold;">' . 
                     esc_html__('Essential Only', 'simple-cookie-consent') . '</span>';
-                break;
             
             default:
-                $output .= '<span class="consent-status" style="display: inline-block; padding: 4px 8px; background-color: #f5f5f5; color: #333; border-radius: 3px;">' . 
-                    esc_html($status) . '</span>';
-                break;
+                return '<span class="consent-status">' . esc_html($status) . '</span>';
         }
-        
-        $output .= '</div>';
-        
-        return $output;
     }
 
     /**
      * Timestamp column
-     *
-     * @param array $item Item data
-     * @return string HTML output
      */
-    private function column_timestamp($item) {
-        // Debug the timestamp data
-        error_log("Timestamp column data: created_at=" . (isset($item['created_at']) ? $item['created_at'] : 'not set') . 
-                  ", updated_at=" . (isset($item['updated_at']) ? $item['updated_at'] : 'not set'));
-        
+    public function column_timestamp($item) {
         if (!isset($item['created_at']) || empty($item['created_at'])) {
-            return '<div style="color: #666; font-style: italic;">' . esc_html__('No timestamp available', 'simple-cookie-consent') . '</div>';
+            return esc_html__('No timestamp available', 'simple-cookie-consent');
         }
         
         $created = strtotime($item['created_at']);
-        $updated = isset($item['updated_at']) ? strtotime($item['updated_at']) : 0;
         
-        $output = '<div style="min-width: 150px;">';
+        $created_date = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $created);
+        $human_time = human_time_diff($created, current_time('timestamp'));
         
-        // Format created time with both relative and absolute timestamps
-        $created_absolute = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $created);
-        $created_relative = human_time_diff($created, current_time('timestamp'));
+        $output = '<span title="' . esc_attr($created_date) . '">';
+        $output .= esc_html($human_time) . ' ' . esc_html__('ago', 'simple-cookie-consent');
+        $output .= '</span>';
         
-        $output .= '<div style="margin-bottom: 3px;" title="' . esc_attr($created_absolute) . '">';
-        $output .= '<span class="dashicons dashicons-calendar-alt" style="color: #0073aa; font-size: 16px; vertical-align: text-bottom;"></span> ';
-        $output .= '<span style="vertical-align: middle;">' . esc_html($created_relative) . ' ' . esc_html__('ago', 'simple-cookie-consent') . '</span>';
-        $output .= '</div>';
-        
-        // If updated time is different, show it too
-        if ($updated > 0 && $updated > $created) {
-            $updated_absolute = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $updated);
-            $updated_relative = human_time_diff($updated, current_time('timestamp'));
+        // Add updated time if available and different
+        if (isset($item['updated_at']) && !empty($item['updated_at']) && $item['updated_at'] !== $item['created_at']) {
+            $updated = strtotime($item['updated_at']);
+            $updated_date = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $updated);
+            $updated_human_time = human_time_diff($updated, current_time('timestamp'));
             
-            $output .= '<div style="margin-top: 3px; color: #777; font-size: 0.9em;" title="' . esc_attr($updated_absolute) . '">';
-            $output .= '<span class="dashicons dashicons-update" style="color: #777; font-size: 14px; vertical-align: text-bottom;"></span> ';
-            $output .= '<span style="vertical-align: middle;">' . esc_html__('Updated:', 'simple-cookie-consent') . ' ' . esc_html($updated_relative) . ' ' . esc_html__('ago', 'simple-cookie-consent') . '</span>';
-            $output .= '</div>';
+            $output .= '<br><small>';
+            $output .= '<em>' . esc_html__('Updated:', 'simple-cookie-consent') . '</em> ';
+            $output .= '<span title="' . esc_attr($updated_date) . '">';
+            $output .= esc_html($updated_human_time) . ' ' . esc_html__('ago', 'simple-cookie-consent');
+            $output .= '</span>';
+            $output .= '</small>';
         }
-        
-        $output .= '</div>';
         
         return $output;
     }
@@ -369,69 +307,14 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
     public function no_items() {
         esc_html_e('No consent records found.', 'simple-cookie-consent');
     }
-
+    
     /**
-     * Display the table
-     * Overridden to add extra debugging
+     * Get table classes
+     * Override to add our custom class
      */
-    public function display() {
-        $singular = $this->_args['singular'];
-
-        $this->display_tablenav('top');
-
-        $this->screen->render_screen_reader_content('heading_list');
-        ?>
-        <table class="wp-list-table <?php echo implode(' ', $this->get_table_classes()); ?>">
-            <thead>
-            <tr>
-                <?php $this->print_column_headers(); ?>
-            </tr>
-            </thead>
-
-            <tbody id="the-list"<?php if ($singular) { echo " data-wp-lists='list:$singular'"; } ?>>
-                <?php 
-                // Debug the items before display
-                error_log('Total items to display: ' . count($this->items));
-                $this->display_rows_or_placeholder(); 
-                ?>
-            </tbody>
-
-            <tfoot>
-            <tr>
-                <?php $this->print_column_headers(false); ?>
-            </tr>
-            </tfoot>
-        </table>
-        <?php
-        $this->display_tablenav('bottom');
-    }
-
-    /**
-     * Display rows or placeholder
-     * Overridden to add debugging
-     */
-    public function display_rows_or_placeholder() {
-        if (empty($this->items)) {
-            echo '<tr class="no-items"><td class="colspanchange" colspan="' . $this->get_column_count() . '">';
-            $this->no_items();
-            echo '</td></tr>';
-            return;
-        }
-
-        // Display each row
-        foreach ($this->items as $item_index => $item) {
-            error_log("Displaying row for item index: $item_index");
-            $this->single_row($item);
-        }
-    }
-
-    /**
-     * Display a single row
-     * Overridden to add debugging
-     */
-    public function single_row($item) {
-        echo '<tr>';
-        $this->single_row_columns($item);
-        echo '</tr>';
+    protected function get_table_classes() {
+        $classes = parent::get_table_classes();
+        $classes[] = 'simple-cookie-consent-table';
+        return $classes;
     }
 }

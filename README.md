@@ -261,3 +261,4 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
   - Comprehensive README with examples
   - Proper code comments
   - Translation templates
+  

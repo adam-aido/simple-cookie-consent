@@ -93,9 +93,6 @@ class Simple_Cookie_Consent_Storage {
             // Sanitize consent details
             $sanitized_details = $this->sanitize_consent_details($_POST['details']);
             
-            // Debug
-            error_log('Consent details before saving: ' . wp_json_encode($sanitized_details));
-            
             // Save consent to database
             $result = $this->store_consent($consent_accepted, $sanitized_details);
             
@@ -226,8 +223,6 @@ class Simple_Cookie_Consent_Storage {
         
         if ($inserted === false) {
             error_log('Database error when storing consent: ' . $wpdb->last_error);
-        } else {
-            error_log('Consent stored with ID: ' . $wpdb->insert_id);
         }
         
         return ($inserted !== false);

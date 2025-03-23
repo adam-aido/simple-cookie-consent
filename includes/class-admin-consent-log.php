@@ -28,13 +28,6 @@ class Simple_Cookie_Consent_Admin_Log {
         global $simple_cookie_consent_storage;
         $this->storage = $simple_cookie_consent_storage;
         
-        // Verify storage initialization
-        if (!$this->storage) {
-            error_log('Storage not initialized in admin log');
-        } else {
-            error_log('Storage initialized in admin log');
-        }
-        
         // Add admin menu
         add_action('admin_menu', array($this, 'add_menu_page'));
         
@@ -54,38 +47,44 @@ class Simple_Cookie_Consent_Admin_Log {
             return;
         }
         
-        // Add inline styles
+        // Add inline styles for better table display
         wp_add_inline_style('list-tables', '
-            .wp-list-table .column-user_info { width: 25%; }
-            .wp-list-table .column-consent_details { width: 30%; }
-            .wp-list-table .column-status { width: 15%; }
-            .wp-list-table .column-timestamp { width: 20%; }
+            .simple-cookie-consent-table .column-id { width: 5%; }
+            .simple-cookie-consent-table .column-user_info { width: 25%; }
+            .simple-cookie-consent-table .column-consent_details { width: 30%; }
+            .simple-cookie-consent-table .column-status { width: 15%; }
+            .simple-cookie-consent-table .column-timestamp { width: 20%; }
             
-            .consent-details-list li {
+            .simple-cookie-consent-table .consent-details-list {
+                margin: 0;
+                padding-left: 20px;
+            }
+            
+            .simple-cookie-consent-table .consent-details-list li {
                 margin-bottom: 5px;
             }
             
-            .consent-status {
-                display: inline-block;
-                padding: 4px 8px;
-                border-radius: 3px;
+            .simple-cookie-consent-table .dashicons-yes {
+                color: green;
+            }
+            
+            .simple-cookie-consent-table .dashicons-no {
+                color: red;
+            }
+            
+            .simple-cookie-consent-table .consent-status.accepted {
+                color: green;
                 font-weight: bold;
-                text-align: center;
             }
             
-            .consent-status.accepted {
-                background-color: #dff0d8;
-                color: #3c763d;
+            .simple-cookie-consent-table .consent-status.declined {
+                color: red;
+                font-weight: bold;
             }
             
-            .consent-status.declined {
-                background-color: #f2dede;
-                color: #a94442;
-            }
-            
-            .consent-status.essential-only {
-                background-color: #fcf8e3;
-                color: #8a6d3b;
+            .simple-cookie-consent-table .consent-status.essential-only {
+                color: orange;
+                font-weight: bold;
             }
         ');
     }
@@ -111,22 +110,13 @@ class Simple_Cookie_Consent_Admin_Log {
      * Load list table class
      */
     public function load_list_table() {
-        // This is the correct hook to load WP_List_Table
+        // Load the list table class
         require_once(SIMPLE_COOKIE_CONSENT_INCLUDES_DIR . 'class-list-table.php');
         
-        // Debug storage availability
-        if (!$this->storage) {
-            error_log('Storage not available when loading list table');
-            return;
-        }
-        
-        // Check if table exists before initializing list table
-        if (!$this->storage->table_exists()) {
-            error_log('Consent table does not exist - creating table');
-            $this->storage->create_tables();
-        }
-        
+        // Create the list table
         $this->list_table = new Simple_Cookie_Consent_List_Table($this->storage);
+        
+        // Prepare list table items
         $this->list_table->prepare_items();
     }
 
@@ -139,36 +129,43 @@ class Simple_Cookie_Consent_Admin_Log {
             wp_die(__('You do not have sufficient permissions to access this page.', 'simple-cookie-consent'));
         }
         
-        // Verify the list table is initialized
+        // Ensure list table is loaded
         if (!$this->list_table) {
-            error_log('List table not initialized');
-            echo '<div class="error notice"><p>';
-            esc_html_e('Error: Could not initialize the consent log table. Please check the error log for details.', 'simple-cookie-consent');
-            echo '</p></div>';
-            return;
-        }
-        
-        // Verify the storage is available
-        if (!$this->storage) {
-            error_log('Storage not available on render');
-            echo '<div class="error notice"><p>';
-            esc_html_e('Error: Consent storage is not available. Please check the error log for details.', 'simple-cookie-consent');
-            echo '</p></div>';
-            return;
-        }
-        
-        // Verify the table exists
-        if (!$this->storage->table_exists()) {
-            error_log('Table does not exist on render');
-            echo '<div class="error notice"><p>';
-            esc_html_e('Error: Consent table does not exist in the database. Please deactivate and reactivate the plugin.', 'simple-cookie-consent');
-            echo '</p></div>';
-            return;
+            // Try to load it again
+            $this->load_list_table();
+            
+            // If still not loaded, show error
+            if (!$this->list_table) {
+                echo '<div class="notice notice-error"><p>';
+                esc_html_e('Error: Could not initialize the consent log table.', 'simple-cookie-consent');
+                echo '</p></div>';
+                return;
+            }
         }
         
         ?>
         <div class="wrap">
             <h1 class="wp-heading-inline"><?php echo esc_html__('Cookie Consent Log', 'simple-cookie-consent'); ?></h1>
+            
+            <hr class="wp-header-end">
+            
+            <?php
+            // Show sample data notice
+            if (isset($_GET['show_sample']) && $_GET['show_sample'] === '1') {
+                $this->generate_sample_data();
+                echo '<div class="notice notice-success is-dismissible"><p>';
+                esc_html_e('Sample data has been generated successfully!', 'simple-cookie-consent');
+                echo '</p></div>';
+            }
+            ?>
+            
+            <div class="tablenav top">
+                <div class="alignleft actions">
+                    <a href="<?php echo esc_url(add_query_arg('show_sample', '1')); ?>" class="button">
+                        <?php esc_html_e('Generate Sample Data', 'simple-cookie-consent'); ?>
+                    </a>
+                </div>
+            </div>
             
             <form method="post">
                 <input type="hidden" name="page" value="simple-cookie-consent-log">
@@ -193,6 +190,52 @@ class Simple_Cookie_Consent_Admin_Log {
     }
 
     /**
+     * Generate sample data for demo purposes
+     */
+    private function generate_sample_data() {
+        if (!$this->storage || !method_exists($this->storage, 'store_consent')) {
+            return;
+        }
+        
+        // Sample consent types
+        $consent_types = array(
+            // Accept all
+            array(
+                'necessary' => true,
+                'preferences' => true,
+                'analytics' => true,
+                'marketing' => true,
+                'social' => true,
+                'googleConsentMode' => true
+            ),
+            // Essential only
+            array(
+                'necessary' => true,
+                'preferences' => false,
+                'analytics' => false,
+                'marketing' => false,
+                'social' => false,
+                'googleConsentMode' => true
+            ),
+            // Mixed
+            array(
+                'necessary' => true,
+                'preferences' => true,
+                'analytics' => true,
+                'marketing' => false,
+                'social' => false,
+                'googleConsentMode' => true
+            )
+        );
+        
+        // Generate 5 sample records
+        for ($i = 0; $i < 5; $i++) {
+            $consent_index = $i % 3; // Cycle through the 3 sample consent types
+            $this->storage->store_consent(true, $consent_types[$consent_index]);
+        }
+    }
+
+    /**
      * Handle export action
      */
     public function handle_export() {
@@ -206,11 +249,6 @@ class Simple_Cookie_Consent_Admin_Log {
         // Check permissions
         if (!current_user_can('manage_options')) {
             wp_die(__('You do not have sufficient permissions to export this data.', 'simple-cookie-consent'));
-        }
-        
-        // Verify the storage is available
-        if (!$this->storage) {
-            wp_die(__('Error: Consent storage is not available. Please check the error log for details.', 'simple-cookie-consent'));
         }
         
         // Get all consents
