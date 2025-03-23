@@ -1,0 +1,281 @@
+# Copyright (C) 2025 Your Name
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Simple Cookie Consent 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/simple-cookie-consent\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Polish <pl@li.org>\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-03-23T12:00:00+00:00\n"
+"PO-Revision-Date: 2025-03-23 12:00+0100\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: simple-cookie-consent\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+#. Plugin Name of the plugin
+msgid "Simple Cookie Consent"
+msgstr "Prosta Zgoda na Pliki Cookie"
+
+#. Plugin URI of the plugin
+msgid "https://example.com/simple-cookie-consent"
+msgstr "https://example.com/simple-cookie-consent"
+
+#. Description of the plugin
+msgid "A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent."
+msgstr "Lekka wtyczka zgody na pliki cookie kompatybilna z Google Consent Mode v2, blokująca pliki cookie, localStorage i sessionStorage do momentu uzyskania zgody użytkownika."
+
+#. Author of the plugin
+msgid "Your Name"
+msgstr "Twoje Imię"
+
+#. Author URI of the plugin
+msgid "https://example.com"
+msgstr "https://example.com"
+
+#: includes/class-admin.php:26
+#: templates/admin-settings.php:15
+msgid "Cookie Consent Settings"
+msgstr "Ustawienia Zgody na Pliki Cookie"
+
+#: includes/class-admin.php:27
+msgid "Cookie Consent"
+msgstr "Zgoda na Pliki Cookie"
+
+#: includes/class-admin.php:45
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: includes/class-shortcodes.php:27
+#: includes/class-shortcodes.php:43
+#: templates/consent-form.php:14
+msgid "Cookie Settings"
+msgstr "Ustawienia Plików Cookie"
+
+#: includes/class-shortcodes.php:28
+#: templates/consent-form.php:87
+msgid "Update Preferences"
+msgstr "Aktualizuj Preferencje"
+
+#: includes/class-simple-cookie-consent.php:81
+msgid "Necessary"
+msgstr "Niezbędne"
+
+#: includes/class-simple-cookie-consent.php:82
+msgid "These cookies are essential for the website to function properly."
+msgstr "Te pliki cookie są niezbędne do prawidłowego funkcjonowania strony internetowej."
+
+#: includes/class-simple-cookie-consent.php:89
+msgid "Preferences"
+msgstr "Preferencje"
+
+#: includes/class-simple-cookie-consent.php:90
+msgid "These cookies allow the website to remember choices you make."
+msgstr "Te pliki cookie pozwalają stronie internetowej zapamiętać dokonane przez Ciebie wybory."
+
+#: includes/class-simple-cookie-consent.php:97
+msgid "Analytics"
+msgstr "Analityczne"
+
+#: includes/class-simple-cookie-consent.php:98
+msgid "These cookies help us understand how visitors interact with the website."
+msgstr "Te pliki cookie pomagają nam zrozumieć, w jaki sposób odwiedzający korzystają ze strony internetowej."
+
+#: includes/class-simple-cookie-consent.php:105
+msgid "Marketing"
+msgstr "Marketingowe"
+
+#: includes/class-simple-cookie-consent.php:106
+msgid "These cookies are used to track visitors across websites to display relevant advertisements."
+msgstr "Te pliki cookie służą do śledzenia odwiedzających na różnych stronach internetowych w celu wyświetlania odpowiednich reklam."
+
+#: includes/class-simple-cookie-consent.php:113
+msgid "Social Media"
+msgstr "Media Społecznościowe"
+
+#: includes/class-simple-cookie-consent.php:114
+msgid "These cookies are set by social media services that we have added to the site."
+msgstr "Te pliki cookie są ustawiane przez serwisy społecznościowe, które dodaliśmy do naszej strony."
+
+#: simple-cookie-consent.php:89
+#: templates/admin-settings.php:86
+#: templates/consent-banner.php:20
+msgid "Cookie Consent"
+msgstr "Zgoda na Pliki Cookie"
+
+#: simple-cookie-consent.php:90
+#: templates/admin-settings.php:96
+#: templates/consent-banner.php:21
+msgid "This website uses cookies to ensure you get the best experience."
+msgstr "Ta strona używa plików cookie, aby zapewnić najlepsze doświadczenia."
+
+#: simple-cookie-consent.php:91
+#: templates/admin-settings.php:105
+#: templates/consent-banner.php:24
+msgid "Accept All"
+msgstr "Akceptuj Wszystkie"
+
+#: simple-cookie-consent.php:92
+#: templates/admin-settings.php:114
+#: templates/consent-banner.php:25
+msgid "Accept Only Essential"
+msgstr "Akceptuj Tylko Niezbędne"
+
+#: simple-cookie-consent.php:93
+#: templates/admin-settings.php:123
+#: templates/consent-banner.php:26
+msgid "Customize"
+msgstr "Dostosuj"
+
+#: simple-cookie-consent.php:94
+#: templates/admin-settings.php:132
+#: templates/consent-banner.php:87
+msgid "Save Preferences"
+msgstr "Zapisz Preferencje"
+
+#: templates/admin-settings.php:16
+msgid "General"
+msgstr "Ogólne"
+
+#: templates/admin-settings.php:17
+msgid "Appearance"
+msgstr "Wygląd"
+
+#: templates/admin-settings.php:18
+msgid "Text Settings"
+msgstr "Ustawienia Tekstu"
+
+#: templates/admin-settings.php:19
+msgid "Google Consent Mode"
+msgstr "Tryb Zgody Google"
+
+#: templates/admin-settings.php:28
+msgid "Cookie Expiry (days)"
+msgstr "Ważność Plików Cookie (dni)"
+
+#: templates/admin-settings.php:33
+msgid "Number of days until the consent expires and the banner is shown again."
+msgstr "Liczba dni, po których zgoda wygasa i baner jest wyświetlany ponownie."
+
+#: templates/admin-settings.php:43
+msgid "Banner Position"
+msgstr "Pozycja Banera"
+
+#: templates/admin-settings.php:49
+msgid "Bottom of screen"
+msgstr "Dół ekranu"
+
+#: templates/admin-settings.php:54
+msgid "Top of screen"
+msgstr "Góra ekranu"
+
+#: templates/admin-settings.php:61
+msgid "Color Theme"
+msgstr "Motyw Kolorystyczny"
+
+#: templates/admin-settings.php:67
+msgid "Light"
+msgstr "Jasny"
+
+#: templates/admin-settings.php:72
+msgid "Dark"
+msgstr "Ciemny"
+
+#: templates/admin-settings.php:85
+msgid "Banner Title"
+msgstr "Tytuł Banera"
+
+#: templates/admin-settings.php:95
+msgid "Banner Text"
+msgstr "Tekst Banera"
+
+#: templates/admin-settings.php:104
+msgid "Accept All Button"
+msgstr "Przycisk Akceptuj Wszystkie"
+
+#: templates/admin-settings.php:113
+msgid "Accept Essential Button"
+msgstr "Przycisk Akceptuj Niezbędne"
+
+#: templates/admin-settings.php:122
+msgid "Customize Button"
+msgstr "Przycisk Dostosuj"
+
+#: templates/admin-settings.php:131
+msgid "Save Preferences Button"
+msgstr "Przycisk Zapisz Preferencje"
+
+#: templates/admin-settings.php:144
+msgid "Enable Google Consent Mode"
+msgstr "Włącz Tryb Zgody Google"
+
+#: templates/admin-settings.php:150
+msgid "Enabled"
+msgstr "Włączony"
+
+#: templates/admin-settings.php:155
+msgid "Disabled"
+msgstr "Wyłączony"
+
+#: templates/admin-settings.php:158
+msgid "Enable Google Consent Mode v2 integration."
+msgstr "Włącz integrację z Google Consent Mode v2."
+
+#: templates/admin-settings.php:165
+msgid "Region"
+msgstr "Region"
+
+#: templates/admin-settings.php:170
+msgid "The region where consent is required (e.g., EU). Leave blank for all regions."
+msgstr "Region, w którym wymagana jest zgoda (np. EU). Pozostaw puste dla wszystkich regionów."
+
+#: templates/admin-settings.php:176
+msgid "Google Tag ID"
+msgstr "ID Tagu Google"
+
+#: templates/admin-settings.php:181
+msgid "Your Google Tag ID (optional)."
+msgstr "Twój ID Tagu Google (opcjonalnie)."
+
+#: templates/consent-banner.php:33
+msgid "Cookie Preferences"
+msgstr "Preferencje Plików Cookie"
+
+#: templates/consent-banner.php:36
+msgid "Cookies"
+msgstr "Pliki Cookie"
+
+#: templates/consent-banner.php:37
+msgid "About"
+msgstr "Informacje"
+
+#: templates/consent-banner.php:63
+msgid "About Cookies"
+msgstr "O Plikach Cookie"
+
+#: templates/consent-banner.php:64
+msgid "Cookies are small text files that are stored on your browser when you visit websites. They are widely used to make websites work more efficiently and to provide information to the website owners."
+msgstr "Pliki cookie to małe pliki tekstowe przechowywane w przeglądarce podczas odwiedzania stron internetowych. Są powszechnie używane, aby strony działały efektywniej i dostarczały informacji właścicielom witryn."
+
+#: templates/consent-banner.php:67
+msgid "How We Use Cookies"
+msgstr "Jak Używamy Plików Cookie"
+
+#: templates/consent-banner.php:68
+msgid "We use different types of cookies for different purposes. Some cookies are necessary for the website to function properly, while others help us improve your experience by providing insights into how the site is used."
+msgstr "Używamy różnych typów plików cookie do różnych celów. Niektóre pliki cookie są niezbędne do prawidłowego funkcjonowania witryny, podczas gdy inne pomagają nam ulepszać Twoje doświadczenia, dostarczając informacji o sposobie korzystania z witryny."
+
+#: templates/consent-banner.php:71
+msgid "Your Choices"
+msgstr "Twoje Wybory"
+
+#: templates/consent-banner.php:72
+msgid "You can choose to accept or decline cookies. Most web browsers automatically accept cookies, but you can usually modify your browser settings to decline cookies if you prefer. However, this may prevent you from taking full advantage of the website."
+msgstr "Możesz zaakceptować lub odrzucić pliki cookie. Większość przeglądarek automatycznie akceptuje pliki cookie, ale zwykle możesz zmodyfikować ustawienia przeglądarki, aby je odrzucić. Może to jednak uniemożliwić pełne korzystanie z witryny."
+
+#: templates/consent-form.php:94
+msgid "Preferences Updated!"
+msgstr "Preferencje Zaktualizowane!"

@@ -1,0 +1,317 @@
+/**
+ * Simple Cookie Consent CSS
+ */
+
+/* Banner Styles */
+.scc-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 999999;
+    display: none;
+}
+
+.scc-banner.scc-position-bottom {
+    bottom: 0;
+}
+
+.scc-banner.scc-position-top {
+    top: 0;
+}
+
+.scc-banner.scc-theme-dark {
+    background-color: #222;
+    color: #fff;
+}
+
+.scc-banner-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.scc-banner-text {
+    flex: 1;
+    padding-right: 20px;
+}
+
+.scc-banner-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.scc-banner-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Button Styles */
+.scc-button {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border: none;
+    font-size: 14px;
+}
+
+.scc-button-primary {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.scc-button-primary:hover {
+    background-color: #45a049;
+}
+
+.scc-button-secondary {
+    background-color: #f1f1f1;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.scc-button-secondary:hover {
+    background-color: #e7e7e7;
+}
+
+.scc-button-tertiary {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.scc-button-tertiary:hover {
+    background-color: #f9f9f9;
+}
+
+.scc-theme-dark .scc-button-secondary {
+    background-color: #444;
+    color: #fff;
+    border-color: #555;
+}
+
+.scc-theme-dark .scc-button-tertiary {
+    color: #ccc;
+    border-color: #555;
+}
+
+.scc-theme-dark .scc-button-secondary:hover,
+.scc-theme-dark .scc-button-tertiary:hover {
+    background-color: #555;
+}
+
+/* Modal Styles */
+.scc-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000000;
+}
+
+.scc-modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.scc-modal.scc-theme-dark .scc-modal-content {
+    background-color: #222;
+    color: #fff;
+}
+
+/* Tab Styles */
+.scc-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+
+.scc-tab {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.3s;
+}
+
+.scc-tab.scc-active {
+    border-bottom-color: #4CAF50;
+    font-weight: bold;
+}
+
+.scc-tab-content {
+    display: none;
+}
+
+.scc-tab-content.scc-active {
+    display: block;
+}
+
+.scc-theme-dark .scc-tabs {
+    border-bottom-color: #444;
+}
+
+/* Consent Items */
+.scc-consent-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.scc-theme-dark .scc-consent-item {
+    border-bottom-color: #444;
+}
+
+.scc-consent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.scc-consent-title {
+    font-weight: bold;
+}
+
+.scc-consent-description {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.scc-theme-dark .scc-consent-description {
+    color: #aaa;
+}
+
+/* Toggle Switch */
+.scc-consent-toggle {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.scc-consent-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.scc-consent-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.scc-consent-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .scc-consent-slider {
+    background-color: #4CAF50;
+}
+
+input:focus + .scc-consent-slider {
+    box-shadow: 0 0 1px #4CAF50;
+}
+
+input:checked + .scc-consent-slider:before {
+    transform: translateX(26px);
+}
+
+input:disabled + .scc-consent-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Footer */
+.scc-footer {
+    margin-top: 20px;
+    text-align: right;
+}
+
+/* Consent Form (Shortcode) */
+.scc-consent-form {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.scc-theme-dark.scc-consent-form {
+    background-color: #222;
+    color: #fff;
+    border-color: #444;
+}
+
+.scc-settings-button {
+    background-color: #f1f1f1;
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.scc-settings-button:hover {
+    background-color: #e7e7e7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .scc-banner-content {
+        flex-direction: column;
+    }
+    
+    .scc-banner-text {
+        padding-right: 0;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+    
+    .scc-banner-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .scc-modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+}

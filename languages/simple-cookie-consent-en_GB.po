@@ -1,0 +1,281 @@
+# Copyright (C) 2025 Your Name
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Simple Cookie Consent 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/simple-cookie-consent\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: British English <en_GB@li.org>\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-03-23T12:00:00+00:00\n"
+"PO-Revision-Date: 2025-03-23 12:00+0100\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: simple-cookie-consent\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Plugin Name of the plugin
+msgid "Simple Cookie Consent"
+msgstr "Simple Cookie Consent"
+
+#. Plugin URI of the plugin
+msgid "https://example.com/simple-cookie-consent"
+msgstr "https://example.com/simple-cookie-consent"
+
+#. Description of the plugin
+msgid "A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent."
+msgstr "A lightweight cookie consent plugin compatible with Google Consent Mode v2, blocking cookies, localStorage, and sessionStorage until user consent."
+
+#. Author of the plugin
+msgid "Your Name"
+msgstr "Your Name"
+
+#. Author URI of the plugin
+msgid "https://example.com"
+msgstr "https://example.com"
+
+#: includes/class-admin.php:26
+#: templates/admin-settings.php:15
+msgid "Cookie Consent Settings"
+msgstr "Cookie Consent Settings"
+
+#: includes/class-admin.php:27
+msgid "Cookie Consent"
+msgstr "Cookie Consent"
+
+#: includes/class-admin.php:45
+msgid "Settings"
+msgstr "Settings"
+
+#: includes/class-shortcodes.php:27
+#: includes/class-shortcodes.php:43
+#: templates/consent-form.php:14
+msgid "Cookie Settings"
+msgstr "Cookie Settings"
+
+#: includes/class-shortcodes.php:28
+#: templates/consent-form.php:87
+msgid "Update Preferences"
+msgstr "Update Preferences"
+
+#: includes/class-simple-cookie-consent.php:81
+msgid "Necessary"
+msgstr "Necessary"
+
+#: includes/class-simple-cookie-consent.php:82
+msgid "These cookies are essential for the website to function properly."
+msgstr "These cookies are essential for the website to function properly."
+
+#: includes/class-simple-cookie-consent.php:89
+msgid "Preferences"
+msgstr "Preferences"
+
+#: includes/class-simple-cookie-consent.php:90
+msgid "These cookies allow the website to remember choices you make."
+msgstr "These cookies allow the website to remember choices you make."
+
+#: includes/class-simple-cookie-consent.php:97
+msgid "Analytics"
+msgstr "Analytics"
+
+#: includes/class-simple-cookie-consent.php:98
+msgid "These cookies help us understand how visitors interact with the website."
+msgstr "These cookies help us understand how visitors interact with the website."
+
+#: includes/class-simple-cookie-consent.php:105
+msgid "Marketing"
+msgstr "Marketing"
+
+#: includes/class-simple-cookie-consent.php:106
+msgid "These cookies are used to track visitors across websites to display relevant advertisements."
+msgstr "These cookies are used to track visitors across websites to display relevant advertisements."
+
+#: includes/class-simple-cookie-consent.php:113
+msgid "Social Media"
+msgstr "Social Media"
+
+#: includes/class-simple-cookie-consent.php:114
+msgid "These cookies are set by social media services that we have added to the site."
+msgstr "These cookies are set by social media services that we have added to the site."
+
+#: simple-cookie-consent.php:89
+#: templates/admin-settings.php:86
+#: templates/consent-banner.php:20
+msgid "Cookie Consent"
+msgstr "Cookie Consent"
+
+#: simple-cookie-consent.php:90
+#: templates/admin-settings.php:96
+#: templates/consent-banner.php:21
+msgid "This website uses cookies to ensure you get the best experience."
+msgstr "This website uses cookies to ensure you get the best experience."
+
+#: simple-cookie-consent.php:91
+#: templates/admin-settings.php:105
+#: templates/consent-banner.php:24
+msgid "Accept All"
+msgstr "Accept All"
+
+#: simple-cookie-consent.php:92
+#: templates/admin-settings.php:114
+#: templates/consent-banner.php:25
+msgid "Accept Only Essential"
+msgstr "Accept Only Essential"
+
+#: simple-cookie-consent.php:93
+#: templates/admin-settings.php:123
+#: templates/consent-banner.php:26
+msgid "Customize"
+msgstr "Customise"
+
+#: simple-cookie-consent.php:94
+#: templates/admin-settings.php:132
+#: templates/consent-banner.php:87
+msgid "Save Preferences"
+msgstr "Save Preferences"
+
+#: templates/admin-settings.php:16
+msgid "General"
+msgstr "General"
+
+#: templates/admin-settings.php:17
+msgid "Appearance"
+msgstr "Appearance"
+
+#: templates/admin-settings.php:18
+msgid "Text Settings"
+msgstr "Text Settings"
+
+#: templates/admin-settings.php:19
+msgid "Google Consent Mode"
+msgstr "Google Consent Mode"
+
+#: templates/admin-settings.php:28
+msgid "Cookie Expiry (days)"
+msgstr "Cookie Expiry (days)"
+
+#: templates/admin-settings.php:33
+msgid "Number of days until the consent expires and the banner is shown again."
+msgstr "Number of days until the consent expires and the banner is shown again."
+
+#: templates/admin-settings.php:43
+msgid "Banner Position"
+msgstr "Banner Position"
+
+#: templates/admin-settings.php:49
+msgid "Bottom of screen"
+msgstr "Bottom of screen"
+
+#: templates/admin-settings.php:54
+msgid "Top of screen"
+msgstr "Top of screen"
+
+#: templates/admin-settings.php:61
+msgid "Color Theme"
+msgstr "Colour Theme"
+
+#: templates/admin-settings.php:67
+msgid "Light"
+msgstr "Light"
+
+#: templates/admin-settings.php:72
+msgid "Dark"
+msgstr "Dark"
+
+#: templates/admin-settings.php:85
+msgid "Banner Title"
+msgstr "Banner Title"
+
+#: templates/admin-settings.php:95
+msgid "Banner Text"
+msgstr "Banner Text"
+
+#: templates/admin-settings.php:104
+msgid "Accept All Button"
+msgstr "Accept All Button"
+
+#: templates/admin-settings.php:113
+msgid "Accept Essential Button"
+msgstr "Accept Essential Button"
+
+#: templates/admin-settings.php:122
+msgid "Customize Button"
+msgstr "Customise Button"
+
+#: templates/admin-settings.php:131
+msgid "Save Preferences Button"
+msgstr "Save Preferences Button"
+
+#: templates/admin-settings.php:144
+msgid "Enable Google Consent Mode"
+msgstr "Enable Google Consent Mode"
+
+#: templates/admin-settings.php:150
+msgid "Enabled"
+msgstr "Enabled"
+
+#: templates/admin-settings.php:155
+msgid "Disabled"
+msgstr "Disabled"
+
+#: templates/admin-settings.php:158
+msgid "Enable Google Consent Mode v2 integration."
+msgstr "Enable Google Consent Mode v2 integration."
+
+#: templates/admin-settings.php:165
+msgid "Region"
+msgstr "Region"
+
+#: templates/admin-settings.php:170
+msgid "The region where consent is required (e.g., EU). Leave blank for all regions."
+msgstr "The region where consent is required (e.g., EU). Leave blank for all regions."
+
+#: templates/admin-settings.php:176
+msgid "Google Tag ID"
+msgstr "Google Tag ID"
+
+#: templates/admin-settings.php:181
+msgid "Your Google Tag ID (optional)."
+msgstr "Your Google Tag ID (optional)."
+
+#: templates/consent-banner.php:33
+msgid "Cookie Preferences"
+msgstr "Cookie Preferences"
+
+#: templates/consent-banner.php:36
+msgid "Cookies"
+msgstr "Cookies"
+
+#: templates/consent-banner.php:37
+msgid "About"
+msgstr "About"
+
+#: templates/consent-banner.php:63
+msgid "About Cookies"
+msgstr "About Cookies"
+
+#: templates/consent-banner.php:64
+msgid "Cookies are small text files that are stored on your browser when you visit websites. They are widely used to make websites work more efficiently and to provide information to the website owners."
+msgstr "Cookies are small text files that are stored on your browser when you visit websites. They are widely used to make websites work more efficiently and to provide information to the website owners."
+
+#: templates/consent-banner.php:67
+msgid "How We Use Cookies"
+msgstr "How We Use Cookies"
+
+#: templates/consent-banner.php:68
+msgid "We use different types of cookies for different purposes. Some cookies are necessary for the website to function properly, while others help us improve your experience by providing insights into how the site is used."
+msgstr "We use different types of cookies for different purposes. Some cookies are necessary for the website to function properly, while others help us improve your experience by providing insights into how the site is used."
+
+#: templates/consent-banner.php:71
+msgid "Your Choices"
+msgstr "Your Choices"
+
+#: templates/consent-banner.php:72
+msgid "You can choose to accept or decline cookies. Most web browsers automatically accept cookies, but you can usually modify your browser settings to decline cookies if you prefer. However, this may prevent you from taking full advantage of the website."
+msgstr "You can choose to accept or decline cookies. Most web browsers automatically accept cookies, but you can usually modify your browser settings to decline cookies if you prefer. However, this may prevent you from taking full advantage of the website."
+
+#: templates/consent-form.php:94
+msgid "Preferences Updated!"
+msgstr "Preferences Updated!"
