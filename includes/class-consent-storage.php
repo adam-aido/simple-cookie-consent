@@ -25,8 +25,8 @@ class Simple_Cookie_Consent_Storage {
         add_action('simple_cookie_consent_create_tables', array($this, 'create_tables'));
         
         // Ajax handler for storing consent in database
-        add_action('wp_ajax_simple_cookie_store_consent', array($this, 'ajax_store_consent'));
-        add_action('wp_ajax_nopriv_simple_cookie_store_consent', array($this, 'ajax_store_consent'));
+        add_action('wp_ajax_simple_cookie_set_consent', array($this, 'ajax_store_consent'));
+        add_action('wp_ajax_nopriv_simple_cookie_set_consent', array($this, 'ajax_store_consent'));
     }
 
     /**
@@ -66,18 +66,25 @@ class Simple_Cookie_Consent_Storage {
         check_ajax_referer('simple_cookie_consent_nonce', 'nonce');
 
         $consent_accepted = isset($_POST['accepted']) && $_POST['accepted'] ? true : false;
-        $consent_details = isset($_POST['details']) && is_array($_POST['details']) ? $_POST['details'] : array();
         
-        // Sanitize consent details
-        $sanitized_details = $this->sanitize_consent_details($consent_details);
-        
-        // Save consent to database
-        $result = $this->store_consent($consent_accepted, $sanitized_details);
-        
-        if ($result) {
-            wp_send_json_success('Consent saved to database');
+        // Only proceed if details are provided and are an array
+        if (isset($_POST['details']) && is_array($_POST['details'])) {
+            // Sanitize consent details
+            $sanitized_details = $this->sanitize_consent_details($_POST['details']);
+            
+            // Debug
+            error_log('Consent details before saving: ' . wp_json_encode($sanitized_details));
+            
+            // Save consent to database
+            $result = $this->store_consent($consent_accepted, $sanitized_details);
+            
+            if ($result) {
+                wp_send_json_success('Consent saved to database');
+            } else {
+                wp_send_json_error('Error saving consent to database');
+            }
         } else {
-            wp_send_json_error('Error saving consent to database');
+            wp_send_json_error('Invalid consent details format');
         }
         
         wp_die();
@@ -96,12 +103,23 @@ class Simple_Cookie_Consent_Storage {
         
         $sanitized = array();
         
+        // Safety check - ensure $details is an array
+        if (!is_array($details)) {
+            return $sanitized;
+        }
+        
         foreach ($details as $key => $value) {
+            // Sanitize the key
             $key = sanitize_key($key);
             
             // Only include allowed keys
             if (in_array($key, $allowed_types, true)) {
-                $sanitized[$key] = (bool) $value;
+                // Convert to boolean and handle JS "false" strings
+                if (is_string($value) && ($value === 'false' || $value === '0')) {
+                    $sanitized[$key] = false;
+                } else {
+                    $sanitized[$key] = (bool) $value;
+                }
             }
         }
         
@@ -118,7 +136,7 @@ class Simple_Cookie_Consent_Storage {
     public function store_consent($accepted, $details = array()) {
         global $wpdb;
         
-        // Get user information
+        // Get user information - with proper sanitization
         $user_id = get_current_user_id();
         $ip_address = $this->get_ip_address();
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '';
@@ -148,7 +166,14 @@ class Simple_Cookie_Consent_Storage {
             }
         }
         
-        // Insert record
+        // Validate consent_details before insertion
+        $encoded_details = wp_json_encode($details);
+        if ($encoded_details === false) {
+            error_log('Failed to encode consent details as JSON');
+            $encoded_details = '{}'; // Fallback to empty object
+        }
+        
+        // Insert record with prepared statement for security
         $inserted = $wpdb->insert(
             $this->table_name,
             array(
@@ -156,7 +181,7 @@ class Simple_Cookie_Consent_Storage {
                 'ip_address'      => $ip_address,
                 'user_agent'      => $user_agent,
                 'consent_type'    => $consent_type,
-                'consent_details' => wp_json_encode($details),
+                'consent_details' => $encoded_details,
                 'status'          => $status,
                 'created_at'      => current_time('mysql'),
                 'updated_at'      => current_time('mysql'),
@@ -172,6 +197,10 @@ class Simple_Cookie_Consent_Storage {
                 '%s',
             )
         );
+        
+        if ($inserted === false) {
+            error_log('Database error when storing consent: ' . $wpdb->last_error);
+        }
         
         return ($inserted !== false);
     }
@@ -251,7 +280,7 @@ class Simple_Cookie_Consent_Storage {
     }
 
     /**
-     * Get consents from database
+     * Get consents from database with proper data handling
      *
      * @param array $args Query arguments
      * @return array Consent records
@@ -271,36 +300,63 @@ class Simple_Cookie_Consent_Storage {
         
         $args = wp_parse_args($args, $defaults);
         
-        // Build query
-        $query = "SELECT * FROM {$this->table_name} WHERE 1=1";
+        // Sanitize input parameters
+        $number = absint($args['number']);
+        $offset = absint($args['offset']);
+        $orderby = sanitize_sql_orderby($args['orderby'] . ' ' . $args['order']) ?: 'id DESC';
         
-        // Add conditionals
+        // Build query with prepared statements for security
+        $query = "SELECT * FROM {$this->table_name} WHERE 1=1";
+        $prepare_args = array();
+        
+        // Add conditionals using prepared statements
         if ($args['user_id'] !== null) {
-            $query .= $wpdb->prepare(" AND user_id = %d", $args['user_id']);
+            $query .= " AND user_id = %d";
+            $prepare_args[] = $args['user_id'];
         }
         
         if ($args['ip_address'] !== null) {
-            $query .= $wpdb->prepare(" AND ip_address = %s", $args['ip_address']);
+            $query .= " AND ip_address = %s";
+            $prepare_args[] = $args['ip_address'];
         }
         
         if ($args['status'] !== null) {
-            $query .= $wpdb->prepare(" AND status = %s", $args['status']);
+            $query .= " AND status = %s";
+            $prepare_args[] = $args['status'];
         }
         
-        // Add order
-        $query .= " ORDER BY " . sanitize_sql_orderby("{$args['orderby']} {$args['order']}");
+        // Add order and limit
+        $query .= " ORDER BY {$orderby} LIMIT %d, %d";
+        $prepare_args[] = $offset;
+        $prepare_args[] = $number;
         
-        // Add limit
-        $query .= $wpdb->prepare(" LIMIT %d, %d", $args['offset'], $args['number']);
+        // Prepare and execute the query
+        $prepared_query = !empty($prepare_args) 
+            ? $wpdb->prepare($query, $prepare_args) 
+            : $query;
         
         // Get results
-        $results = $wpdb->get_results($query, ARRAY_A);
+        $results = $wpdb->get_results($prepared_query, ARRAY_A);
         
         // Process results
         $consents = array();
-        foreach ($results as $row) {
-            $row['consent_details'] = json_decode($row['consent_details'], true);
-            $consents[] = $row;
+        if (is_array($results)) {
+            foreach ($results as $row) {
+                // Decode consent details safely
+                try {
+                    $details = json_decode($row['consent_details'], true);
+                    // Validate the decoded data
+                    if (!is_array($details)) {
+                        $details = array();
+                    }
+                } catch (Exception $e) {
+                    error_log('Error decoding consent details: ' . $e->getMessage());
+                    $details = array();
+                }
+                
+                $row['consent_details'] = $details;
+                $consents[] = $row;
+            }
         }
         
         return $consents;
@@ -325,21 +381,30 @@ class Simple_Cookie_Consent_Storage {
         
         // Build query
         $query = "SELECT COUNT(*) FROM {$this->table_name} WHERE 1=1";
+        $prepare_args = array();
         
-        // Add conditionals
+        // Add conditionals with prepared statements
         if ($args['user_id'] !== null) {
-            $query .= $wpdb->prepare(" AND user_id = %d", $args['user_id']);
+            $query .= " AND user_id = %d";
+            $prepare_args[] = $args['user_id'];
         }
         
         if ($args['ip_address'] !== null) {
-            $query .= $wpdb->prepare(" AND ip_address = %s", $args['ip_address']);
+            $query .= " AND ip_address = %s";
+            $prepare_args[] = $args['ip_address'];
         }
         
         if ($args['status'] !== null) {
-            $query .= $wpdb->prepare(" AND status = %s", $args['status']);
+            $query .= " AND status = %s";
+            $prepare_args[] = $args['status'];
         }
         
+        // Prepare and execute the query
+        $prepared_query = !empty($prepare_args) 
+            ? $wpdb->prepare($query, $prepare_args) 
+            : $query;
+        
         // Get count
-        return (int) $wpdb->get_var($query);
+        return (int) $wpdb->get_var($prepared_query);
     }
 }

@@ -149,6 +149,11 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
     private function column_user_info($item) {
         $output = '';
         
+        // Make sure we have the data we need
+        if (!isset($item['user_id']) && !isset($item['ip_address']) && !isset($item['user_agent'])) {
+            return esc_html__('No user information available', 'simple-cookie-consent');
+        }
+        
         // User ID if available
         if (!empty($item['user_id'])) {
             $user = get_userdata($item['user_id']);
@@ -158,18 +163,22 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
         }
         
         // IP Address
-        $output .= '<strong>' . esc_html__('IP:', 'simple-cookie-consent') . '</strong> ';
-        $output .= esc_html($item['ip_address']) . '<br>';
+        if (!empty($item['ip_address'])) {
+            $output .= '<strong>' . esc_html__('IP:', 'simple-cookie-consent') . '</strong> ';
+            $output .= esc_html($item['ip_address']) . '<br>';
+        }
         
         // User Agent (abbreviated)
-        $user_agent = $item['user_agent'];
-        if (strlen($user_agent) > 50) {
-            $user_agent = substr($user_agent, 0, 47) . '...';
+        if (!empty($item['user_agent'])) {
+            $user_agent = $item['user_agent'];
+            if (strlen($user_agent) > 50) {
+                $user_agent = substr($user_agent, 0, 47) . '...';
+            }
+            $output .= '<span title="' . esc_attr($item['user_agent']) . '">';
+            $output .= '<strong>' . esc_html__('Browser:', 'simple-cookie-consent') . '</strong> ';
+            $output .= esc_html($user_agent);
+            $output .= '</span>';
         }
-        $output .= '<span title="' . esc_attr($item['user_agent']) . '">';
-        $output .= '<strong>' . esc_html__('Browser:', 'simple-cookie-consent') . '</strong> ';
-        $output .= esc_html($user_agent);
-        $output .= '</span>';
         
         return $output;
     }
@@ -181,13 +190,13 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
      * @return string
      */
     private function column_consent_details($item) {
-        $details = $item['consent_details'];
+        $details = isset($item['consent_details']) ? $item['consent_details'] : null;
         
-        if (!is_array($details)) {
+        if (!is_array($details) || empty($details)) {
             return esc_html__('No details available', 'simple-cookie-consent');
         }
         
-        $output = '<ul class="consent-details-list">';
+        $output = '<ul class="consent-details-list" style="margin: 0; padding-left: 20px;">';
         
         // Handle standard consent types
         $consent_types = Simple_Cookie_Consent::get_consent_types();
@@ -198,7 +207,7 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
                 '<span class="dashicons dashicons-yes" style="color:green;"></span>' : 
                 '<span class="dashicons dashicons-no" style="color:red;"></span>';
             
-            $output .= '<li>' . $status . ' ' . esc_html($type['label']) . '</li>';
+            $output .= '<li style="margin-bottom: 3px;">' . $status . ' ' . esc_html($type['label']) . '</li>';
         }
         
         $output .= '</ul>';
@@ -213,17 +222,24 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
      * @return string
      */
     private function column_status($item) {
+        if (!isset($item['status'])) {
+            return esc_html__('Unknown', 'simple-cookie-consent');
+        }
+        
         $status = $item['status'];
         
         switch ($status) {
             case 'accepted':
-                return '<span class="consent-status accepted">' . esc_html__('Accepted', 'simple-cookie-consent') . '</span>';
+                return '<span class="consent-status accepted" style="color:green; font-weight:bold;">' . 
+                    esc_html__('Accepted', 'simple-cookie-consent') . '</span>';
             
             case 'declined':
-                return '<span class="consent-status declined">' . esc_html__('Declined', 'simple-cookie-consent') . '</span>';
+                return '<span class="consent-status declined" style="color:red; font-weight:bold;">' . 
+                    esc_html__('Declined', 'simple-cookie-consent') . '</span>';
             
             case 'essential_only':
-                return '<span class="consent-status essential-only">' . esc_html__('Essential Only', 'simple-cookie-consent') . '</span>';
+                return '<span class="consent-status essential-only" style="color:orange; font-weight:bold;">' . 
+                    esc_html__('Essential Only', 'simple-cookie-consent') . '</span>';
             
             default:
                 return '<span class="consent-status">' . esc_html($status) . '</span>';
@@ -237,12 +253,19 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
      * @return string
      */
     private function column_timestamp($item) {
-        $created = strtotime($item['created_at']);
-        $updated = strtotime($item['updated_at']);
+        if (!isset($item['created_at']) && !isset($item['updated_at'])) {
+            return esc_html__('No timestamp available', 'simple-cookie-consent');
+        }
         
-        $output = '<span title="' . esc_attr(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $created)) . '">';
-        $output .= esc_html(human_time_diff($created, current_time('timestamp'))) . ' ' . esc_html__('ago', 'simple-cookie-consent');
-        $output .= '</span>';
+        $created = isset($item['created_at']) ? strtotime($item['created_at']) : 0;
+        $updated = isset($item['updated_at']) ? strtotime($item['updated_at']) : 0;
+        
+        $output = '';
+        if ($created > 0) {
+            $output = '<span title="' . esc_attr(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $created)) . '">';
+            $output .= esc_html(human_time_diff($created, current_time('timestamp'))) . ' ' . esc_html__('ago', 'simple-cookie-consent');
+            $output .= '</span>';
+        }
         
         // Show updated time if different
         if ($updated > $created) {
@@ -255,5 +278,12 @@ class Simple_Cookie_Consent_List_Table extends WP_List_Table {
         }
         
         return $output;
+    }
+
+    /**
+     * No items found text
+     */
+    public function no_items() {
+        esc_html_e('No consent records found.', 'simple-cookie-consent');
     }
 }
