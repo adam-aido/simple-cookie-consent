@@ -27,7 +27,7 @@
     }
     
     /**
-     * Get consent details from cookie
+     * Get consent details from cookie - with security improvements
      */
     function getConsentDetails() {
         try {
@@ -36,10 +36,25 @@
                 .find(row => row.startsWith('simple_cookie_consent_details='));
             
             if (consentCookie) {
-                return JSON.parse(decodeURIComponent(consentCookie.split('=')[1]));
+                try {
+                    // Parse JSON safely
+                    const cookieValue = decodeURIComponent(consentCookie.split('=')[1]);
+                    const details = JSON.parse(cookieValue);
+                    
+                    // Validate the structure to prevent injection
+                    if (typeof details === 'object' && details !== null) {
+                        // Ensure all values are booleans
+                        Object.keys(details).forEach(key => {
+                            details[key] = !!details[key]; // Force boolean
+                        });
+                        return details;
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing consent details', parseError);
+                }
             }
         } catch (e) {
-            console.error('Error parsing consent details', e);
+            console.error('Error reading consent cookie', e);
         }
         
         return null;
@@ -76,6 +91,8 @@
         // Tab navigation
         $('.scc-tab').on('click', function() {
             const tabId = $(this).data('tab');
+            if (!tabId) return;
+            
             $('.scc-tab').removeClass('scc-active');
             $(this).addClass('scc-active');
             
@@ -100,7 +117,11 @@
      * Initialize Google Consent Mode v2 if enabled
      */
     function initGoogleConsentMode() {
-        if (simpleCookieConsent.googleConsentMode) {
+        if (!simpleCookieConsent || !simpleCookieConsent.googleConsentMode) {
+            return;
+        }
+        
+        try {
             // Google Consent Mode v2 initial setup
             if (!window.gtag) {
                 window.dataLayer = window.dataLayer || [];
@@ -141,22 +162,38 @@
             if (simpleCookieConsent.googleTagId) {
                 loadGoogleTag(simpleCookieConsent.googleTagId);
             }
+        } catch (e) {
+            console.error('Error initializing Google Consent Mode:', e);
         }
     }
     
     /**
-     * Load Google Tag script
+     * Load Google Tag script safely
      */
     function loadGoogleTag(tagId) {
-        // Only load if not already loaded
-        if (!document.querySelector('script[src*="googletagmanager.com/gtag/js?id=' + tagId + '"]')) {
-            const script = document.createElement('script');
-            script.async = true;
-            script.src = 'https://www.googletagmanager.com/gtag/js?id=' + tagId;
-            document.head.appendChild(script);
-            
-            gtag('js', new Date());
-            gtag('config', tagId);
+        if (!tagId || typeof tagId !== 'string') {
+            return;
+        }
+        
+        // Validate tag ID format (basic validation)
+        if (!/^G-[A-Z0-9]+$|^UA-[0-9]+-[0-9]+$|^GTM-[A-Z0-9]+$/.test(tagId)) {
+            console.error('Invalid Google Tag ID format');
+            return;
+        }
+        
+        try {
+            // Only load if not already loaded
+            if (!document.querySelector('script[src*="googletagmanager.com/gtag/js?id=' + tagId + '"]')) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=' + tagId;
+                document.head.appendChild(script);
+                
+                gtag('js', new Date());
+                gtag('config', tagId);
+            }
+        } catch (e) {
+            console.error('Error loading Google Tag script:', e);
         }
     }
     
@@ -183,7 +220,7 @@
         // Update Google Consent Mode if enabled
         updateGoogleConsentMode(consentDetails);
         
-        // AJAX call to notify server
+        // AJAX call to notify server and store in database
         sendConsentToServer(true, consentDetails);
     }
     
@@ -195,7 +232,7 @@
         
         // Mark only essential cookies as accepted
         $.each(simpleCookieConsent.consentTypes, function(index, type) {
-            consentDetails[type.id] = type.required;
+            consentDetails[type.id] = !!type.required;
         });
         
         consentDetails.googleConsentMode = simpleCookieConsent.googleConsentMode;
@@ -210,7 +247,7 @@
         // Update Google Consent Mode if enabled
         updateGoogleConsentMode(consentDetails);
         
-        // AJAX call to notify server
+        // AJAX call to notify server and store in database
         sendConsentToServer(true, consentDetails);
     }
     
@@ -224,12 +261,13 @@
         // Mark required cookies as checked and disabled
         $.each(simpleCookieConsent.consentTypes, function(index, type) {
             const $checkbox = $('#scc-consent-' + type.id);
+            if (!$checkbox.length) return;
             
             if (type.required) {
                 $checkbox.prop('checked', true).prop('disabled', true);
             } else if (details && typeof details[type.id] !== 'undefined') {
                 // Set checkbox state from saved preferences
-                $checkbox.prop('checked', details[type.id]);
+                $checkbox.prop('checked', !!details[type.id]);
             }
         });
         
@@ -252,7 +290,8 @@
         
         // Get all toggle states
         $.each(simpleCookieConsent.consentTypes, function(index, type) {
-            consentDetails[type.id] = $('#scc-consent-' + type.id).is(':checked');
+            const $checkbox = $('#scc-consent-' + type.id);
+            consentDetails[type.id] = $checkbox.length ? $checkbox.is(':checked') : false;
         });
         
         consentDetails.googleConsentMode = simpleCookieConsent.googleConsentMode;
@@ -267,7 +306,7 @@
         // Update Google Consent Mode if enabled
         updateGoogleConsentMode(consentDetails);
         
-        // AJAX call to notify server
+        // AJAX call to notify server and store in database
         sendConsentToServer(true, consentDetails);
     }
     
@@ -281,11 +320,25 @@
         const expires = 'expires=' + date.toUTCString();
         
         // Set the main acceptance cookie
-        document.cookie = 'simple_cookie_consent_accepted=' + (accepted ? '1' : '0') + '; ' + expires + '; path=/; SameSite=Lax';
+        document.cookie = 'simple_cookie_consent_accepted=' + (accepted ? '1' : '0') + '; ' + expires + '; path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
         
         // Store details if provided
         if (!$.isEmptyObject(details)) {
-            document.cookie = 'simple_cookie_consent_details=' + encodeURIComponent(JSON.stringify(details)) + '; ' + expires + '; path=/; SameSite=Lax';
+            try {
+                const safeDetails = {};
+                
+                // Force all values to be boolean
+                Object.keys(details).forEach(key => {
+                    safeDetails[key] = !!details[key];
+                });
+                
+                document.cookie = 'simple_cookie_consent_details=' + 
+                    encodeURIComponent(JSON.stringify(safeDetails)) + 
+                    '; ' + expires + '; path=/; SameSite=Lax' +
+                    (location.protocol === 'https:' ? '; Secure' : '');
+            } catch (e) {
+                console.error('Error setting consent details cookie:', e);
+            }
         }
         
         // Enable storage according to preferences
@@ -298,7 +351,11 @@
      * Update Google Consent Mode with user preferences
      */
     function updateGoogleConsentMode(consentDetails) {
-        if (simpleCookieConsent.googleConsentMode && typeof gtag === 'function') {
+        if (!simpleCookieConsent.googleConsentMode || typeof gtag !== 'function') {
+            return;
+        }
+        
+        try {
             gtag('consent', 'update', {
                 'ad_storage': consentDetails.marketing ? 'granted' : 'denied',
                 'analytics_storage': consentDetails.analytics ? 'granted' : 'denied',
@@ -306,6 +363,8 @@
                 'personalization_storage': consentDetails.social ? 'granted' : 'denied',
                 'security_storage': 'granted' // Always granted for security
             });
+        } catch (e) {
+            console.error('Error updating Google Consent Mode:', e);
         }
     }
     
@@ -313,6 +372,19 @@
      * Send consent data to server via AJAX
      */
     function sendConsentToServer(accepted, details) {
+        if (!simpleCookieConsent || !simpleCookieConsent.ajaxUrl || !simpleCookieConsent.nonce) {
+            return;
+        }
+        
+        // Clone the details to avoid modifying the original object
+        const safeDetails = {};
+        
+        // Sanitize details - only include valid consent types
+        Object.keys(details || {}).forEach(key => {
+            // Force boolean values
+            safeDetails[key] = !!details[key];
+        });
+        
         $.ajax({
             url: simpleCookieConsent.ajaxUrl,
             type: 'POST',
@@ -320,13 +392,17 @@
                 action: 'simple_cookie_set_consent',
                 nonce: simpleCookieConsent.nonce,
                 accepted: accepted ? 1 : 0,
-                details: details
+                details: safeDetails
             },
             success: function(response) {
-                console.log('Consent saved to server:', response);
+                if (response && response.success) {
+                    console.log('Consent saved to server');
+                } else {
+                    console.error('Error saving consent:', response?.data || 'Unknown error');
+                }
             },
             error: function(xhr, status, error) {
-                console.error('Error saving consent:', error);
+                console.error('AJAX error saving consent:', error);
             }
         });
     }

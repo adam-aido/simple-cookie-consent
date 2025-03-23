@@ -6,6 +6,8 @@ A lightweight yet powerful GDPR/CCPA compliant cookie consent plugin for WordPre
 
 - **Pre-consent Blocking**: Automatically blocks cookies, localStorage, and sessionStorage before consent
 - **Google Consent Mode v2**: Complete integration with Google's latest consent framework
+- **Database Storage**: Records all consent choices in a database table for auditing and compliance
+- **Admin Dashboard**: View and export consent logs with user details and timestamps
 - **Customizable UI**: Light/dark themes, position options, and fully customizable text
 - **Multiple Consent Categories**: Necessary, Preferences, Analytics, Marketing, and Social Media
 - **Responsive Design**: Looks great on both desktop and mobile devices
@@ -16,6 +18,7 @@ A lightweight yet powerful GDPR/CCPA compliant cookie consent plugin for WordPre
 
 - WordPress 6.0 or higher
 - PHP 7.4 or higher
+- MySQL 5.6 or higher
 - A modern web browser (Chrome, Firefox, Safari, Edge)
 - JavaScript enabled in the browser
 
@@ -24,6 +27,34 @@ A lightweight yet powerful GDPR/CCPA compliant cookie consent plugin for WordPre
 1. Download the plugin and upload it to your `/wp-content/plugins/` directory
 2. Activate the plugin through the WordPress Plugins menu
 3. Go to Settings > Cookie Consent to configure the plugin
+
+## Database Storage & Compliance
+
+This plugin records all consent choices in a dedicated database table (`wp_cookie_consents`) which includes:
+
+- User ID (for logged-in users)
+- IP address (can be anonymized)
+- User agent
+- Consent type and details
+- Timestamp of consent
+
+### Consent Log Dashboard
+
+Administrators can access a consent log at Settings > Consent Log to:
+
+1. View all consent records with filterable columns
+2. See which specific categories were accepted/rejected
+3. Export consent records to CSV for compliance documentation
+4. Track consent changes over time
+
+### IP Anonymization
+
+For GDPR compliance, the plugin can anonymize IP addresses before storing them:
+
+- IPv4 addresses have the last octet replaced with zeros (e.g., 192.168.1.1 → 192.168.1.0)
+- IPv6 addresses have the last 80 bits (last 5 hextets) replaced with zeros
+
+This option is enabled by default and can be configured in settings.
 
 ## Usage
 
@@ -119,7 +150,7 @@ This plugin is released under the Unlicense. This places the software in the pub
 
 ### The Unlicense
 
-```
+```text
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -152,10 +183,36 @@ Contributions are welcome! Feel free to fork the repository, make your changes, 
 
 ## Changelog
 
-### 1.0.0
+### 1.1.0 (March 23, 2025)
 
-- Initial release
-- Core cookie and storage blocking functionality
-- Google Consent Mode v2 integration
-- Customizable UI with light/dark themes
-- Translation support
+- **New Features:**
+  - Database storage of consent records
+  - Admin consent log with CSV export
+  - IP anonymization for GDPR compliance
+
+- **Technical Improvements:**
+  - Enhanced security for data storage
+  - Database version tracking and updates
+  - Optimized query performance
+
+### 1.0.0 (March 23, 2025)
+
+- **New Features:**
+  - Core cookie and storage blocking functionality
+  - Google Consent Mode v2 integration
+  - Customizable UI with light/dark themes
+  - Shortcode support for forms and buttons
+  - Translation support with Polish and British English examples
+
+- **Technical Improvements:**
+  - WordPress 6.7 compatibility
+  - Modular code architecture
+  - Security hardening and XSS protection
+  - SameSite and Secure cookie attributes
+  - Input validation and sanitization
+  - CSRF protection
+
+- **Documentation:**
+  - Comprehensive README with examples
+  - Proper code comments
+  - Translation templates
